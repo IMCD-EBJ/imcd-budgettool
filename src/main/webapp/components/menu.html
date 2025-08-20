@@ -1,0 +1,117 @@
+<!-- Sidebar  -->
+<nav id="sidebar" style="height:100%" class="active">
+    <div class="sidebar-header">
+        <img src="imgs/logo.jpeg" width="100%">
+    </div>
+    <ul class="list-unstyled components">
+        <li>
+            <a href="javascript:openclose()">
+                <i class="fas fa-align-left"></i>
+            </a>
+        </li>
+        <li>
+            <a href="javascript:logout()">
+                 <i class="fas fa-sign-out-alt"></i>
+            </a>
+        </li>
+        <li>
+            <a href="javascript:infoApp()">
+                <i class="fas fa-info"></i>
+            </a>
+        </li>
+        <!--<li>
+            <a href="javascript:loadTask()">
+                <i class="fas fa-home"></i>
+            </a>
+        </li>-->
+        <li>
+            <a href="#homeSubmenu" data-toggle="collapse" aria-expanded="true" class="dropdown-toggle">
+                <i class="fas fa-tasks"></i>&nbsp;Budget tool
+            </a>
+            <ul class="collapse show list-unstyled" id="homeSubmenu">
+                <li id="bumProcess">
+                    <a href="bum_process.html">BUM process</a>
+                </li>
+                <li id="pmProcess">
+                    <a href="pm_process.html">PM process</a>
+                </li>
+                <li id="srProcess">
+                    <a href="sr_process.html">SR process</a>
+                </li>
+            </ul>
+            </a>
+        </li>
+    </ul>
+</nav>
+<script>
+    function openclose() {
+        $('#sidebar').toggleClass('active');
+        let estado = $('#sidebar').attr("class");
+        localStorage.setItem(APP_NAME+"estado_menu", estado);
+    }
+    function loadTask() {
+        rol = 'all';
+        window.location.href = 'index.html#'+rol;
+
+        $('.nav-link').each(function() {
+            if ($(this).attr('href') === '#'+rol) {
+                this.className = "nav-link active";
+            } else {
+                this.className = "nav-link";
+            }
+        });
+        $('#tableitems').bootstrapTable('refresh');
+    }
+    $(document).ready(function () {
+        var promises = [getConfigurationParam('CFG_ShowBUMProcess'), getConfigurationParam('CFG_ShowPMProcess'), getConfigurationParam('CFG_ShowSRProcess')];
+        Promise.all(promises).then(values => {
+            var CFGBUM = values[0]['CFG_ShowBUMProcess'];
+            var CFGPM = values[1]['CFG_ShowPMProcess'];
+            var CFGSR = values[2]['CFG_ShowSRProcess'];
+
+
+            var verPantallaBUM = false;
+            var verPantallaPM = false;
+            var verPantallaSR = false;
+            userLogged.Profiles.forEach(profile => {
+
+                if ((profile == 'BUM' || profile == 'ADMIN') && esBUM) {
+                    verPantallaBUM = (CFGBUM == '1');
+                    verPantallaPM = (CFGPM == '1');
+                    verPantallaSR = (CFGSR == '1');
+                }
+                if (profile == 'MM') {
+                    verPantallaPM = (CFGPM == '1');
+                    verPantallaSR = (CFGSR == '1');
+                }
+                if (profile == 'PM') {
+                    verPantallaPM = (CFGPM == '1');
+                }
+                if (profile == 'SR') {
+                    verPantallaSR = (CFGSR == '1');
+                }
+            });
+
+            if (!verPantallaBUM) {
+                $('#bumProcess').hide();
+            }
+            if (!verPantallaPM) {
+                $('#pmProcess').hide();
+            }
+            if (!verPantallaSR) {
+                $('#srProcess').hide();
+            }
+
+            $("a").click(async function () {
+                unsavedRedirect($(this).attr('href'), 'redirect');
+
+            });
+
+            if (localStorage.getItem(APP_NAME + "estado_menu") != null) {
+                let estado = localStorage.getItem(APP_NAME + "estado_menu");
+                $('#sidebar').attr("class", estado);
+            } else
+                $('#sidebar').addClass('active')
+        })
+    });
+</script>

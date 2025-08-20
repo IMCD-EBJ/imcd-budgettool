@@ -1,0 +1,67 @@
+<div id="divHeader">
+    <div class="card card-body flex-row justify-content-end">
+        <div class="mt-1">
+            <label for="select-delegation">Current User:</label>
+        </div>
+        <div class="mr-2 ml-1 mt-1" id="currentUser">
+
+        </div>
+        <div class="mr-2 mt-1" id="divLabelDelegation">
+            <label id="labelDelegation" for="select-delegation">| Delegated User</label>
+        </div>
+        <div>
+            <select id="select-delegation" name="delegationUser" class="form-control required">
+            </select>
+        </div>
+        <div class="ml-1">
+            <button class="btn btn-primary " id="buttonChangeDelegation" onclick="changeDelegatedUser(event)">
+                Submit
+            </button>
+            <button class="btn btn-info" id="rollBackOriginal" onclick="changeOriginalUser(event)">
+                Change to original User
+            </button>
+        </div>
+    </div>
+
+
+    <div class="card card-body flex-row justify-content-end" id="rolesCardDiv" style="display:none;">
+        <div class="mt-1" id="roles">
+            Active rol:
+        </div>
+        <div class="ml-1">
+            <button class="btn btn-primary " id="buttonChangeRol" onclick="changeActiveRol(true)">
+                Change rol
+            </button>
+        </div>
+    </div>
+</div>
+<script>
+    $(document).ready(function () {
+    if (localStorage.getItem(APP_NAME + "usuario") != null) {
+
+
+        var usuarioOriginal = JSON.parse(localStorage.getItem(APP_NAME + "usuarioOriginal"));
+        var UbT_LocalADUuser = userLogged.UbT_LocalADUuser;
+        var UBT_UserName = userLogged.UBT_UserName;
+        var bu_agrupada = userLogged.bu_agrupada;
+        if (usuarioOriginal.UbT_LocalADUuser == UbT_LocalADUuser) {
+            $('#rollBackOriginal').hide();
+        } else {
+            $('#select-delegation').hide();
+            $('#divLabelDelegation').hide();
+            $('#buttonChangeDelegation').hide();
+        }
+        var pantalla = window.location.pathname.split('/')[2].split('.')[0];
+        loadDropDown($("#select-delegation"), "delegation/usersList?userActive=" + UbT_LocalADUuser + '&pantalla=' + pantalla + "&BU_AGRUPADA=" + bu_agrupada, "localAdUser", "localAdUser")
+
+        $('#currentUser').empty();
+        $('#currentUser').append(capitalizeFirstLetterString(UBT_UserName));
+        gestionRoles();
+
+        Array.from(document.querySelectorAll('#divHeader button')).forEach(button => {
+            button.style.width = '14em';
+        })
+    }
+    });
+
+</script>

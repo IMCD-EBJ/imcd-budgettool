@@ -1,0 +1,105 @@
+<ul class="nav nav-tabs" id="nav-interna">
+    <li class="nav-item">
+        <a class="nav-link" href="universe_header.html?edit=true">Header</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" checkandsave href="universe_files.html">Files</a>
+    </li>
+    <li class="nav-item" id="navFilters" style="display: none">
+        <a class="nav-link" checkandsave href="universe_filters.html?edit=true">Filters</a>
+    </li>
+    <li class="nav-item" id="navProductFiles" style="display: none">
+        <a class="nav-link" href="universe_product_files.html">Product files</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="universe_applied_filters.html">Applied ppc filters</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="universe_discard_filters.html">Disc. PPC products </a>
+    </li>
+    <li class="nav-item" id="navPRCFile" style="display: none;">
+        <a class="nav-link" href="universe_jdeFiles.html">PRC File</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="universe_lines.html">Lines</a>
+    </li>
+    <li class="nav-item" id="navPPCvsPRC" style="display: none;">
+        <a class="nav-link" href="universe_ppcvsprc.html">PPC vs PRC</a>
+    </li>
+    <li class="nav-item" id="navPPCLinesPurchasePrice" style="display: none;">
+        <a class="nav-link" href="universe_ppclines_purchaseprice.html">PPC Prices</a>
+    </li>
+    <li class="nav-item" id="navConfiguration" style="display: none;">
+        <a class="nav-link" href="universe_configuration.html">Configuration</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="universe_follow_up_status.html">Status Follow Up</a>
+    </li>
+    <li class="nav-item" id="navPPCSalesPrice" style="display: none;">
+        <a class="nav-link" href="universe_PRC_salesprice.html">PRC Prices</a>
+    </li>
+    <li class="nav-item" id="navPPCPMActivity" style="display: none;">
+        <a class="nav-link" href="universe_ppc_pm_activity.html">PPC PM Activity</a>
+    </li>
+    <li class="nav-item" id="navPPCSRActivity" style="display: none;">
+        <a class="nav-link" href="universe_ppc_sr_activity.html">PRC SR Activity</a>
+    </li>
+</ul>
+<script>
+    $(document).ready(function () {
+        $("a").click(function () {
+            unsavedRedirect($(this).attr('href'), 'redirect');
+        });
+
+        UNIVERSE_HEADER = JSON.parse(localStorage.getItem(APP_NAME+"universe_header"));
+        /*                
+                PPC vs PRC → Si PPCS_Id >= 3 navPPCvsPRC
+                PPC prices → Si PPCS_Id >= 4 navPPCLinesPurchasePrice
+                PRC prices → Si PPCS_Id >= 9 navPPCSalesPrice
+                Status follow up → Visible siempre
+                PPC PM Activity → Si PPCS_Id >= 4 universe_ppc_pm_activity
+                PRC SR Activity → Si PPCS_Id >= 9 universe_ppc_sr_activity
+        */
+
+        let checkandsave = false;
+
+        $(".nav-link").map((index, itm) => {
+            if (itm.href.indexOf(window.location.pathname) > 0 && itm.href.indexOf("#") < 0) {
+                itm.href = "#";
+                itm.className = "nav-link active"
+                checkandsave = itm.attributes["checkandsave"] != undefined;
+            }
+        })
+        if (checkandsave)
+            $(".nav-link").map((index, itm) => { itm.href = "javascript:checkAndSave('" + itm.href + "')" });
+
+        if (UNIVERSE_HEADER.PPCS_Id === 2 && UNIVERSE_HEADER.PPCH_ProcedureType !== 'FPO')
+            $('#navPRCFile').show();
+
+        if (UNIVERSE_HEADER.PPCS_Id >= 3 && UNIVERSE_HEADER.PPCH_ProcedureType !== 'FPO')
+            $('#navPPCvsPRC').show();
+
+        if (UNIVERSE_HEADER.PPCS_Id >= 4)
+            $("#navPPCLinesPurchasePrice").show();
+
+        if ((UNIVERSE_HEADER.PPCS_Id >= 9 || UNIVERSE_HEADER.PPCS_Id == 5) && UNIVERSE_HEADER.PPCH_ProcedureType !== 'FPO')
+            $("#navPPCSalesPrice").show();
+
+        if (UNIVERSE_HEADER.PPCS_Id >= 4)
+            $("#navPPCPMActivity").show();
+
+        if (UNIVERSE_HEADER.PPCS_Id >= 9 && UNIVERSE_HEADER.PPCH_ProcedureType !== 'FPO')
+            $("#navPPCSRActivity").show();
+
+        if (UNIVERSE_HEADER.PPCS_Id >= 4)
+            $("#navConfiguration").show();
+
+        if(UNIVERSE_HEADER.PPCH_ProductLoad !== 'FILE') {
+            $("#navFilters").show();
+        }
+
+        if(UNIVERSE_HEADER.PPCH_ProductLoad === 'FILE') {
+            $("#navProductFiles").show();
+        }
+    });
+</script>

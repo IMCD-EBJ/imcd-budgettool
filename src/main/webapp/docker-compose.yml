@@ -1,0 +1,26 @@
+version: '3.4'
+
+services:
+  db:
+    image: gtanhauzer/imcdpricetool:v642021
+    ports:
+      - "1433:1433"
+    
+  backend:
+    image: gtanhauzer/backend:v742021_1
+    environment: 
+     - SPRING_DATASOURCE_URL=jdbc:sqlserver://db:1433;databaseName=IMCDPriceTool
+    #expose:
+    # - "8080"
+    ports:
+      - "8080:8080"
+    #extra hosts can be used for standalone SQL Server or services at the dev PC
+    depends_on:
+      - db
+
+  front:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8081"    
