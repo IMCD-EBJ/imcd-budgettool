@@ -7,7 +7,6 @@ import com.zaxxer.hikari.HikariDataSource;
 import org.codehaus.jettison.json.JSONException;
 import org.springframework.core.env.Environment;
 import org.springframework.jdbc.datasource.AbstractDataSource;
-
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.concurrent.locks.ReentrantLock;

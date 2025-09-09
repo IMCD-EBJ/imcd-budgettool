@@ -15,7 +15,16 @@
         <version>3.2.4</version>
     </parent>
 
+    <properties>
+        <java.version>21</java.version>
+        <jjwt-api.version>0.12.3</jjwt-api.version>
+        <jjwt-impl.version>0.12.3</jjwt-impl.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+    </properties>
+
     <dependencies>
+        <!-- Spring Boot starters -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-ldap</artifactId>
@@ -32,17 +41,26 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-jdbc</artifactId>
+        </dependency>
 
+        <!-- Base de datos -->
         <dependency>
             <groupId>com.microsoft.sqlserver</groupId>
             <artifactId>mssql-jdbc</artifactId>
             <scope>runtime</scope>
         </dependency>
+
+        <!-- WAR en contenedor externo -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-tomcat</artifactId>
             <scope>provided</scope>
         </dependency>
+
+        <!-- Seguridad y tests -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
@@ -53,61 +71,66 @@
             <artifactId>spring-security-test</artifactId>
             <scope>test</scope>
         </dependency>
+
+        <!-- Jasypt starter -->
         <dependency>
             <groupId>com.github.ulisesbocchio</groupId>
-            <artifactId>jasypt-spring-boot</artifactId>
-            <version>2.0.0</version>
+            <artifactId>jasypt-spring-boot-starter</artifactId>
+            <version>3.0.5</version>
         </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-jdbc</artifactId>
-            <version>RELEASE</version>
-            <scope>compile</scope>
-        </dependency>
+
+        <!-- JSON-smart (net.minidev.json.*) -->
         <dependency>
             <groupId>net.minidev</groupId>
             <artifactId>json-smart</artifactId>
-            <version>2.5.0</version>
+            <version>2.5.1</version>
+        </dependency>
+
+        <!-- Apache POI -->
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi</artifactId>
+            <version>5.2.2</version>
         </dependency>
         <dependency>
             <groupId>org.apache.poi</groupId>
             <artifactId>poi-ooxml</artifactId>
             <version>5.2.2</version>
         </dependency>
+
+        <!-- Commons Lang -->
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
             <version>3.14.0</version>
         </dependency>
-        <dependency>
-            <groupId>com.vaadin.external.google</groupId>
-            <artifactId>android-json</artifactId>
-            <version>0.0.20131108.vaadin1</version>
-            <scope>compile</scope>
-        </dependency>
+
+        <!-- AWS SDK -->
         <dependency>
             <groupId>com.amazonaws</groupId>
             <artifactId>aws-java-sdk-secretsmanager</artifactId>
             <version>1.12.569</version>
         </dependency>
+
+        <!-- Jettison (para JSONException) -->
         <dependency>
             <groupId>org.codehaus.jettison</groupId>
             <artifactId>jettison</artifactId>
-            <version>1.1</version>
+            <version>1.5.4</version>
         </dependency>
+
+        <!-- JJWT -->
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-api</artifactId>
             <version>${jjwt-api.version}</version>
         </dependency>
-
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-impl</artifactId>
             <version>${jjwt-impl.version}</version>
             <scope>runtime</scope>
         </dependency>
-
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-jackson</artifactId>
@@ -116,12 +139,6 @@
         </dependency>
     </dependencies>
 
-    <properties>
-        <java.version>21</java.version>
-        <jjwt-api.version>0.12.3</jjwt-api.version>
-        <jjwt-impl.version>0.12.3</jjwt-impl.version>
-    </properties>
-
     <profiles>
         <profile>
             <id>dev</id>
@@ -129,7 +146,6 @@
                 <build.profile.id>dev</build.profile.id>
                 <profileActive>dev</profileActive>
             </properties>
-
             <build>
                 <finalName>budgettool</finalName>
                 <plugins>
@@ -140,13 +156,13 @@
                 </plugins>
             </build>
         </profile>
+
         <profile>
             <id>pro</id>
             <properties>
                 <build.profile.id>pro</build.profile.id>
                 <profileActive>pro</profileActive>
             </properties>
-
             <build>
                 <finalName>budgettool</finalName>
                 <plugins>
@@ -157,13 +173,13 @@
                 </plugins>
             </build>
         </profile>
+
         <profile>
             <id>loc</id>
             <properties>
                 <build.profile.id>loc</build.profile.id>
                 <profileActive>loc</profileActive>
             </properties>
-
             <build>
                 <finalName>budgettool</finalName>
                 <plugins>
@@ -174,13 +190,13 @@
                 </plugins>
             </build>
         </profile>
+
         <profile>
             <id>dev-fr</id>
             <properties>
                 <build.profile.id>dev-fr</build.profile.id>
                 <profileActive>dev-fr</profileActive>
             </properties>
-
             <build>
                 <finalName>budgettool-fr</finalName>
                 <plugins>
@@ -191,13 +207,13 @@
                 </plugins>
             </build>
         </profile>
+
         <profile>
             <id>pro-fr</id>
             <properties>
                 <build.profile.id>pro-fr</build.profile.id>
                 <profileActive>pro-fr</profileActive>
             </properties>
-
             <build>
                 <finalName>budgettool</finalName>
                 <plugins>
@@ -208,13 +224,13 @@
                 </plugins>
             </build>
         </profile>
+
         <profile>
             <id>dev-mo</id>
             <properties>
                 <build.profile.id>dev-mo</build.profile.id>
                 <profileActive>dev-mo</profileActive>
             </properties>
-
             <build>
                 <finalName>budgettool-mo</finalName>
                 <plugins>
@@ -225,13 +241,13 @@
                 </plugins>
             </build>
         </profile>
+
         <profile>
             <id>pro-mo</id>
             <properties>
                 <build.profile.id>pro-mo</build.profile.id>
                 <profileActive>pro-mo</profileActive>
             </properties>
-
             <build>
                 <finalName>budgettool</finalName>
                 <plugins>
@@ -243,5 +259,4 @@
             </build>
         </profile>
     </profiles>
-
 </project>

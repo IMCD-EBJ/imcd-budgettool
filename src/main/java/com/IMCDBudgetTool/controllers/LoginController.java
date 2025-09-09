@@ -11,10 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.core.env.Environment;
-
 import java.security.Principal;
-import java.util.ArrayList;
-import java.util.concurrent.atomic.AtomicReference;
 
 @RestController
 @CrossOrigin(origins = "*", allowedHeaders = "*")

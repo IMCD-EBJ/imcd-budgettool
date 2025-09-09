@@ -12,12 +12,6 @@ import org.springframework.core.env.Environment;
 import org.springframework.data.ldap.repository.config.EnableLdapRepositories;
 import org.springframework.ldap.core.LdapTemplate;
 import org.springframework.ldap.core.support.LdapContextSource;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.web.SecurityFilterChain;
-
-
-import javax.sql.DataSource;
 import java.util.HashMap;
 import java.util.Map;
 

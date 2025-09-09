@@ -15,7 +15,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.SqlParameter;
 import org.springframework.web.bind.annotation.*;
-
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.Calendar;
