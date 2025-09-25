@@ -68,11 +68,74 @@ async function getActualStatus() {
     });
 }
 
+async function loadPrincipals() {
+    const businessType = $('#select-businessType').val();
+    const incomeType = $('#select-incomeType').val();
+
+    $("#select-principal").find('option').remove();
+    $("#select-principal").append('<option value="">select an option</option>');
+
+    await loadDropDown(
+        $("#select-principal"),
+        "srProcess/listPrincipals?UBT_LocalADUuser=" + UbT_LocalADUuser
+            + "&INCOME_TYPE=" + encodeURIComponent(incomeType || '')
+            + "&BUSINESS_TYPE=" + encodeURIComponent(businessType || '')
+            + "&BU_AGRUPADA=" + userLogged.bu_agrupada
+            + "&CHECKED=" + checkedValue
+            + "&ROL=" + ((esBUM) ? "BUM" : (esMM) ? "MM" : 'SR')
+            + "&TYPE=" + encodeURIComponent(typedChecked.toString()),
+        "id", "name"
+    );
+
+    // Autoselect si solo hay 1 opción real además del placeholder
+    if (document.getElementById('select-principal').options.length == 2) {
+        await nextSelectedOption('select-principal');
+    }
+}
+
+async function onSelectPrincipalChange() {
+    const businessType = $('#select-businessType').val();
+    const incomeType = $("#select-incomeType").val();
+    const principal = $("#select-principal").val();
+    const customerPrev = $('#select-customer').val(); // por si quieres intentar mantener selección
+
+    $("#select-customer").find('option').remove();
+    $("#select-customer").append('<option value="">select an option</option>');
+
+    await loadDropDown($("#select-customer"),
+        "srProcess/listCustomers?UBT_LocalADUuser=" + UbT_LocalADUuser
+        + "&INCOME_TYPE=" + encodeURIComponent(incomeType || '')
+        + "&BUSINESS_TYPE=" + encodeURIComponent(businessType || '')
+        + "&PRINCIPAL=" + encodeURIComponent(principal || '')
+        + "&BU_AGRUPADA=" + userLogged.bu_agrupada
+        + "&CHECKED=" + checkedValue
+        + "&ROL=" + ((esBUM) ? "BUM" : (esMM) ? "MM" : 'SR')
+        + "&TYPE=" + encodeURIComponent(typedChecked.toString()),
+        "id", "name"
+    );
+
+    // Si el antiguo customer sigue disponible, lo preservamos
+    if (customerPrev && $("#select-customer option[value='" + customerPrev + "']").length) {
+        $('#select-customer').val(customerPrev);
+        await onSelectCustomerChange();
+    } else {
+        await nextSelectedOption('select-customer');
+        // si no hay customer seleccionado, limpia tablas/botón guardar:
+        if ($('#select-customer').val() == '') {
+            $('#divTables').hide();
+            $("#saveButton").prop("disabled", true);
+        }
+    }
+}
+
+
 async function getValuesForTotales(tableType, customer) {
+    const principal = $('#select-principal').val() || '';
     $.get({
         url: URLBACKEND + "srProcess/getTotales?UBT_LocalADUuser=" + UbT_LocalADUuser
             + "&customer=" + customer
             + "&TABLE_TYPE=" + tableType
+            + "&PRINCIPAL=" + encodeURIComponent(principal)     // <-- NUEVO
             + "&BU_AGRUPADA=" + userLogged.bu_agrupada
             + "&ROL=" + ((esBUM) ? "BUM" : (esMM) ? "MM" : 'SR'),
         type: 'Get'
@@ -816,45 +879,53 @@ async function onSelectBusinessType() {
 async function onSelectIncomeType() {
     var businessType = $('#select-businessType').val();
     var incomeType = $("#select-incomeType").val();
+
+    // 1) Cargar PRINCIPAL
+    await loadPrincipals();
+
+    // 2) Cargar CUSTOMERS (filtrados por PRINCIPAL si hubiera)
     $("#select-customer").find('option').remove();
     $("#select-customer").append('<option value="">select an option</option>');
-    var customer = $('#select-customer').val();
+
+    var principal = $('#select-principal').val() || '';
 
     await loadDropDown($("#select-customer"), "srProcess/listCustomers?UBT_LocalADUuser=" + UbT_LocalADUuser
-        + "&INCOME_TYPE=" + incomeType
-        + "&BUSINESS_TYPE=" + encodeURIComponent(businessType)
+        + "&INCOME_TYPE=" + encodeURIComponent(incomeType || '')
+        + "&BUSINESS_TYPE=" + encodeURIComponent(businessType || '')
+        + "&PRINCIPAL=" + encodeURIComponent(principal)
         + "&BU_AGRUPADA=" + userLogged.bu_agrupada
         + "&CHECKED=" + checkedValue
         + "&ROL=" + ((esBUM) ? "BUM" : (esMM) ? "MM" : 'SR')
-        + "&TYPE=" + encodeURIComponent(typedChecked.toString()), "id", "name")
+        + "&TYPE=" + encodeURIComponent(typedChecked.toString()), "id", "name");
+
     Array.from(document.querySelectorAll('#buttonsCustomer button')).forEach(button => {
         button.disabled = false;
     });
 
-    //if customer val is set, select that option if it exists
-    if (customer != '') {
-        $('#select-customer').val(customer);
-    }else{
-        await nextSelectedOption('select-customer')
+    // Autoselect si aplica
+    if ($('#select-customer').val() == '') {
+        await nextSelectedOption('select-customer');
     }
 
-    if (customer == '') {
+    if ($('#select-customer').val() == '') {
         $('#divTables').hide();
         $("#saveButton").prop("disabled", true);
     }
 }
 
+
 async function onSelectCustomerChange() {
     var businessType = $('#select-businessType').val();
     var incomeType = $('#select-incomeType').val();
-
     var customer = $('#select-customer').val();
+    var principal = $('#select-principal').val() || '';
 
     var data = await $.get({
         url: URLBACKEND + "srProcess/getCustomerLines?UBT_LocalADUuser=" + UbT_LocalADUuser
-            + "&incomeType=" + incomeType
-            + "&businessType=" + encodeURIComponent(businessType)
+            + "&incomeType=" + encodeURIComponent(incomeType || '')
+            + "&businessType=" + encodeURIComponent(businessType || '')
             + "&customer=" + customer
+            + "&principal=" + encodeURIComponent(principal)     // <-- NUEVO
             + "&ROL=" + ((esBUM) ? "BUM" : (esMM) ? "MM" : 'SR')
             + "&CHECKED=" + checkedValue
             + "&TYPE=" + encodeURIComponent(typedChecked.toString()),
@@ -1063,19 +1134,18 @@ function finalizeSrProcess(e) {
 }
 
 function downloadExcelSr() {
-    var reportName;
-
-    if (esBUM) {
-        reportName = "Sr_ProcessReport_BUM";
-    } else if (esMM) {
-        reportName = "Sr_ProcessReport_MM";
-    } else {
-        reportName = "Sr_ProcessReport";
-    }
-
-    window.open(URLBACKEND + "/report/downloadExcel?REPORT_NAME=" + reportName + "&LocalADUser=" + userLogged.UbT_LocalADUuser + "&BUAGRUPADA=" + userLogged.bu_agrupada,
-        "_blank");
+    var reportName = esBUM ? "Sr_ProcessReport_BUM" : (esMM ? "Sr_ProcessReport_MM" : "Sr_ProcessReport");
+    var principal = $('#select-principal').val() || '';
+    window.open(
+        URLBACKEND + "/report/downloadExcel"
+        + "?REPORT_NAME=" + reportName
+        + "&LocalADUser=" + userLogged.UbT_LocalADUuser
+        + "&BUAGRUPADA=" + userLogged.bu_agrupada
+        + "&PRINCIPAL=" + encodeURIComponent(principal),    // <-- NUEVO
+        "_blank"
+    );
 }
+
 
 function checkCambiosRealizados() {
     var inputs = Array.from(document.querySelectorAll('input.editable'));

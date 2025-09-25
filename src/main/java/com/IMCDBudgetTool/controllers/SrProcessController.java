@@ -139,32 +139,54 @@ public class SrProcessController {
 
 
     @GetMapping("/srProcess/getCustomerLines")
-    public ResponseEntity getCustomerLines(@RequestParam(value = "UBT_LocalADUuser") String UBT_LocalADUuser,
-                                           @RequestParam(value = "incomeType") String incomeType,
-                                           @RequestParam(value = "businessType") String businessType,
-                                           @RequestParam(value = "customer") String customer,
-                                           @RequestParam(value = "ROL") String rol,
-                                           @RequestParam(value = "CHECKED") String checked,
-                                           @RequestParam(value = "TYPE") String type) {
+    public ResponseEntity<Object> getCustomerLines(
+            @RequestParam("UBT_LocalADUuser") String UBT_LocalADUuser,
+            @RequestParam(value = "incomeType", required = false) String incomeType,
+            @RequestParam(value = "businessType", required = false) String businessType,
+            @RequestParam(value = "customer", required = false) String customer,
+            @RequestParam(value = "principal", required = false) String principal,
+            @RequestParam(value = "PRINCIPAL", required = false) String principalAlt, // alias por si viene en mayúsculas
+            @RequestParam(value = "ROL", required = false, defaultValue = "") String rol,
+            @RequestParam(value = "CHECKED", required = false, defaultValue = "0") Integer checked,
+            @RequestParam(value = "TYPE", required = false, defaultValue = "") String type
+    ) {
         try {
+            String principalEff = (principal != null && !principal.isEmpty()) ? principal : principalAlt;
+
             JSONArray jsonArray = new JSONArray();
             jdbcTemplate.setResultsMapCaseInsensitive(true);
 
-            jdbcTemplate.query("{call dbo.SR_Customer_Lines_Consult(?,?,?,?,?,?,?)}", new Object[]{UBT_LocalADUuser, incomeType, businessType, customer, rol, checked,type}, resultSet -> {
-                JSONObject jsonMap = new JSONObject();
-                ResultSetMetaData metaData = resultSet.getMetaData();
-                for (int i = 1; i <= metaData.getColumnCount(); i++) {
-                    jsonMap.put(metaData.getColumnLabel(i), resultSet.getString(i));
-                }
-                jsonArray.add(jsonMap);
-            });
+            String usersDelegation = delegationService.getUsersDelegationString(UBT_LocalADUuser, "sr_process", "");
 
-            return new ResponseEntity<Object>(jsonArray, HttpStatus.OK);
+            // ⚠️ Ajusta al SP real que usas para las líneas de cliente y AÑADE @PRINCIPAL en la firma del SP
+            jdbcTemplate.query(
+                    "{call dbo.SR_Customer_Lines_Consult(?,?,?,?,?,?,?,?,?)}",
+                    ps -> {
+                        ps.setString(1, UBT_LocalADUuser);
+                        ps.setString(2, usersDelegation);
+                        ps.setString(3, businessType);
+                        ps.setString(4, incomeType);
+                        ps.setString(5, customer);
+                        ps.setString(6, principalEff);     // <-- NUEVO
+                        ps.setString(7, rol);
+                        ps.setInt(8, (checked != null) ? checked : 0);
+                        ps.setString(9, type);
+                    },
+                    rs -> {
+                        net.minidev.json.JSONObject row = new net.minidev.json.JSONObject();
+                        // mapear tus columnas actuales...
+                        row.put("PRINCIPAL", rs.getString("PRINCIPAL")); // opcional mostrarlo
+                        jsonArray.add(row);
+                    }
+            );
+
+            return new ResponseEntity<>(jsonArray, HttpStatus.OK);
         } catch (Exception e) {
-            LOG.error("ERROR -> ", e);
-            return new ResponseEntity<Object>("Error al conectar la BD", HttpStatus.INTERNAL_SERVER_ERROR);
+            LOG.error("ERROR getCustomerLines -> ", e);
+            return new ResponseEntity<>("Error al conectar la BD", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
 
     @GetMapping("/srProcess/getSelectOptionsBudgetData")
     public ResponseEntity getSelectOptionsBudgetData() {
@@ -335,53 +357,114 @@ public class SrProcessController {
     }
 
     @GetMapping("/srProcess/getTotales")
-    public ResponseEntity getTotales(@RequestParam(value = "UBT_LocalADUuser") String UBT_LocalADUuser,
-                                     @RequestParam(value = "customer") String customer,
-                                     @RequestParam(value = "TABLE_TYPE") String tableType,
-                                     @RequestParam(value= "BU_AGRUPADA") String buAgrupada,
-                                     @RequestParam(value = "ROL") String rol) {
+    public ResponseEntity<Object> getTotales(
+            @RequestParam("UBT_LocalADUuser") String UBT_LocalADUuser,
+            @RequestParam(value = "customer", required = false) String customer,
+            @RequestParam("TABLE_TYPE") String tableType,
+            @RequestParam(value = "ROL", required = false, defaultValue = "") String rol,
+            @RequestParam(value = "BU_AGRUPADA", required = false, defaultValue = "") String buAgrupada,
+            @RequestParam(value = "principal", required = false) String principal,
+            @RequestParam(value = "PRINCIPAL", required = false) String principalAlt // alias
+    ) {
         try {
+            String principalEff = (principal != null && !principal.isEmpty()) ? principal : principalAlt;
+
             JSONArray jsonArray = new JSONArray();
             jdbcTemplate.setResultsMapCaseInsensitive(true);
-            String procedureSRTotals = (rol.equals("SR"))? "SR_Totals_SR_Consult(?,?,?)":(rol.equals("MM"))? "SR_Totals_SR_Consult_MM(?,?,?)":"SR_Totals_SR_Consult_BUM(?,?,?,?)";
-            Object[] params;
-            if (rol.equals("SR") || rol.equals("MM")){
-                params = new Object[]{UBT_LocalADUuser, customer, tableType};
-            }else{
-                params = new Object[]{UBT_LocalADUuser, customer, tableType, buAgrupada};
 
+            String usersDelegation = delegationService.getUsersDelegationString(UBT_LocalADUuser, "sr_process", "");
+
+            // Selección de SP por rol (igual que ya haces), pero AÑADIENDO @PRINCIPAL
+            String procCall;
+            if ("MM".equalsIgnoreCase(rol) || "SR".equalsIgnoreCase(rol)) {
+                // Ejemplo MM/SR
+                procCall = "{call dbo.SR_Totals_SR_Consult_MM(?,?,?,?,?,?)}"; // +@PRINCIPAL
+                jdbcTemplate.query(procCall,
+                        ps -> {
+                            ps.setString(1, UBT_LocalADUuser);
+                            ps.setString(2, usersDelegation);
+                            ps.setString(3, customer);
+                            ps.setString(4, tableType);
+                            ps.setString(5, buAgrupada);
+                            ps.setString(6, principalEff); // <-- NUEVO
+                        },
+                        rs -> {
+                            net.minidev.json.JSONObject row = new net.minidev.json.JSONObject();
+                            // mapear columnas actuales...
+                            jsonArray.add(row);
+                        });
+            } else {
+                // Ejemplo BUM
+                procCall = "{call dbo.SR_Totals_SR_Consult_BUM(?,?,?,?,?,?,?)}"; // +@PRINCIPAL
+                jdbcTemplate.query(procCall,
+                        ps -> {
+                            ps.setString(1, UBT_LocalADUuser);
+                            ps.setString(2, usersDelegation);
+                            ps.setString(3, customer);
+                            ps.setString(4, tableType);
+                            ps.setString(5, buAgrupada);
+                            ps.setString(6, rol);
+                            ps.setString(7, principalEff); // <-- NUEVO
+                        },
+                        rs -> {
+                            net.minidev.json.JSONObject row = new net.minidev.json.JSONObject();
+                            // mapear columnas actuales...
+                            jsonArray.add(row);
+                        });
             }
-            JSONArray jsonArraySr = new JSONArray();
-            jdbcTemplate.query("{call dbo."+procedureSRTotals+"}", params, resultSet -> {
-                JSONObject jsonMap = new JSONObject();
-                ResultSetMetaData metaData = resultSet.getMetaData();
-                for (int i = 1; i <= metaData.getColumnCount(); i++) {
-                    jsonMap.put(metaData.getColumnLabel(i), resultSet.getString(i));
-                }
-                jsonArraySr.add(jsonMap);
-            });
 
-            jsonArray.add(jsonArraySr);
-            JSONArray jsonArrayMgm = new JSONArray();
-            String procedureMgmtTotals = (rol.equals("SR"))? "SR_Totals_Mgmt_Consult(?,?,?)":(rol.equals("MM"))? "SR_Totals_Mgmt_Consult_MM(?,?,?)":"SR_Totals_Mgmt_Consult_BUM(?,?,?,?)";
-            jdbcTemplate.query("{call dbo."+procedureMgmtTotals+"}",params, resultSet -> {
-                JSONObject jsonMap = new JSONObject();
-                ResultSetMetaData metaData = resultSet.getMetaData();
-                for (int i = 1; i <= metaData.getColumnCount(); i++) {
-                    jsonMap.put(metaData.getColumnLabel(i), resultSet.getString(i));
-                }
-                jsonArrayMgm.add(jsonMap);
-            });
-
-            jsonArray.add(jsonArrayMgm);
-
-            return new ResponseEntity<Object>(jsonArray, HttpStatus.OK);
+            return new ResponseEntity<>(jsonArray, HttpStatus.OK);
         } catch (Exception e) {
-            LOG.error("ERROR -> ", e);
-            return new ResponseEntity<Object>("Error al conectar la BD", HttpStatus.INTERNAL_SERVER_ERROR);
+            LOG.error("ERROR getTotales -> ", e);
+            return new ResponseEntity<>("Error al conectar la BD", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
+
+    @GetMapping("/srProcess/listPrincipals")
+    public ResponseEntity<Object> listPrincipals(
+            @RequestParam("UBT_LocalADUuser") String UBT_LocalADUuser,
+            @RequestParam(value = "incomeType", required = false) String incomeType,
+            @RequestParam(value = "businessType", required = false) String businessType,
+            @RequestParam(value = "BU_AGRUPADA", required = false, defaultValue = "") String buAgrupada,
+            @RequestParam(value = "CHECKED", required = false, defaultValue = "0") Integer checked,
+            @RequestParam(value = "ROL", required = false, defaultValue = "") String rol,
+            @RequestParam(value = "TYPE", required = false, defaultValue = "") String type
+    ) {
+        try {
+            JSONArray jsonArray = new JSONArray();
+            jdbcTemplate.setResultsMapCaseInsensitive(true);
+
+            // Delegaciones (igual que haces en el resto de endpoints MM/BUM)
+            String usersDelegation = delegationService.getUsersDelegationString(UBT_LocalADUuser, "sr_process", "");
+
+            // SP de catálogo de PRINCIPAL -> devuelve columnas: id, name
+            jdbcTemplate.query(
+                    "{call dbo.SR_Principal_List_Consult(?,?,?,?,?,?,?,?)}",
+                    ps -> {
+                        ps.setString(1, UBT_LocalADUuser);
+                        ps.setString(2, usersDelegation);          // si no aplica, pasa ""
+                        ps.setString(3, businessType);
+                        ps.setString(4, incomeType);
+                        ps.setString(5, buAgrupada);
+                        ps.setInt(6, (checked != null) ? checked : 0);
+                        ps.setString(7, rol);
+                        ps.setString(8, type);                     // flags de tu UI (A/B/C, etc.) si los usas
+                    },
+                    rs -> {
+                        net.minidev.json.JSONObject row = new net.minidev.json.JSONObject();
+                        row.put("id",   rs.getString("id"));
+                        row.put("name", rs.getString("name"));
+                        jsonArray.add(row);
+                    }
+            );
+
+            return new ResponseEntity<>(jsonArray, HttpStatus.OK);
+        } catch (Exception e) {
+            LOG.error("ERROR listPrincipals -> ", e);
+            return new ResponseEntity<>("Error al consultar PRINCIPAL", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 
 
 

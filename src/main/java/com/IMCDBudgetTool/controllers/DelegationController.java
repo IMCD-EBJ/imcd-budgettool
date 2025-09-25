@@ -57,12 +57,17 @@ public class DelegationController {
             json.put("UBT_TipoUserId",   rs.getString("UBT_TipoUserId"));
             json.put("UBT_Id",           rs.getString("UBT_Id"));
             json.put("bu_agrupada",      rs.getString("bu_agrupada"));
-            json.put("UBT_LocalADUuser", rs.getString("UBT_LocalADUuser"));
+
+            String loginAd = rs.getString("UBT_LocalADUuser");
+            json.put("UBT_LocalADUuser", loginAd);
+            json.put("UbT_LocalADUuser", loginAd);
+
             json.put("UBT_UserName",     rs.getString("UBT_UserName"));
             json.put("UBT_Mail",         rs.getString("UBT_Mail"));
             json.put("CFG_SendEmail",    rs.getBoolean("CFG_SendEmail"));
             jsonArray.add(json);
         });
+
 
         if (jsonArray.size() > 0) {
             return new ResponseEntity<>(jsonArray, HttpStatus.OK);
