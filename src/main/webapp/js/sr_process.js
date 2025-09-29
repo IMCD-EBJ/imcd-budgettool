@@ -174,20 +174,39 @@ function flattenTotalsPayload(data) {
 }
 
 async function getValuesForTotales(tableType, customer) {
-    const principal = $('#select-principal').val() || '';
-    $.get({
-        url: URLBACKEND + "srProcess/getTotales?UBT_LocalADUuser=" + UbT_LocalADUuser
-            + "&customer=" + (customer || '')
-            + "&TABLE_TYPE=" + (tableType || '')
-            + "&PRINCIPAL=" + encodeURIComponent(principal)
-            + "&BU_AGRUPADA=" + userLogged.bu_agrupada
-            + "&ROL=" + ((esBUM) ? "BUM" : (esMM) ? "MM" : 'SR'),
-        type: 'Get'
+    const principal    = ($('#select-principal').val() || '').trim();
+    const businessType = ($('#select-businessType').val() || '').trim();
+    const incomeType   = ($('#select-incomeType').val() || '').trim();
+
+    // TYPE (A,B,C): usa typedChecked si existe; si no, toma los checkboxes .checkABC:checked
+    let typeABC = '';
+    if (typeof typedChecked !== 'undefined' && typedChecked && typedChecked.length) {
+        typeABC = typedChecked.join(',');
+    } else if ($('.checkABC').length) {
+        typeABC = $('.checkABC:checked').map(function () { return this.value; }).get().join(',');
+    }
+
+    const params = {
+        UBT_LocalADUuser: UbT_LocalADUuser,
+        customer: (customer || ''),
+        TABLE_TYPE: (tableType || ''),
+        PRINCIPAL: principal,
+        BU_AGRUPADA: (userLogged && userLogged.bu_agrupada) ? userLogged.bu_agrupada : '',
+        ROL: (esBUM ? 'BUM' : (esMM ? 'MM' : 'SR')),
+        BUSINESS_TYPE: businessType,
+        INCOME_TYPE: incomeType,
+        TYPE: typeABC
+    };
+
+    return $.get({
+        url: URLBACKEND + "srProcess/getTotales",
+        type: 'GET',
+        data: params
     }).then(data => {
         const rows = flattenTotalsPayload(data);
 
-        // Si no hay filas, no es error: simplemente dejamos los inputs como están / en 0
-        if (!rows.length) return;
+        // Sin filas no es error; dejamos los inputs como están
+        if (!rows || !rows.length) return;
 
         rows.forEach(rowObj => {
             Object.entries(rowObj).forEach(([key, value]) => {
@@ -200,9 +219,10 @@ async function getValuesForTotales(tableType, customer) {
             });
         });
     }).catch(() => {
-        // Evita romper la UI si el backend devuelve vacío/500
+        // Silenciar para no romper la UI si el backend devuelve vacío/500
     });
 }
+
 
 function generateActualStatusForSR(data) {
     var totalFinished = 0;

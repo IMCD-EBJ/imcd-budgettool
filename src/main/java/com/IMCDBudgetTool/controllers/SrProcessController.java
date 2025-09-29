@@ -368,88 +368,110 @@ public class SrProcessController {
     }
 
     @GetMapping("/srProcess/getTotales")
-    public org.springframework.http.ResponseEntity<Object> getTotales(
-            @RequestParam(value = "UBT_LocalADUuser") String UBT_LocalADUuser,
-            @RequestParam(value = "customer") String customer,
-            @RequestParam(value = "TABLE_TYPE") String tableType,
-            @RequestParam(value = "BU_AGRUPADA") String buAgrupada,
-            @RequestParam(value = "ROL") String rol,
+    public ResponseEntity<Object> getTotales(
+            @RequestParam("UBT_LocalADUuser") String UBT_LocalADUuser,
+            @RequestParam(value = "customer", required = false) String customer,
+            @RequestParam("TABLE_TYPE") String tableType,
+            @RequestParam(value = "ROL", required = false, defaultValue = "") String rol,
+            @RequestParam(value = "BU_AGRUPADA", required = false, defaultValue = "") String buAgrupada,
             @RequestParam(value = "principal", required = false) String principal,
-            @RequestParam(value = "PRINCIPAL", required = false) String principalAlt
+            @RequestParam(value = "PRINCIPAL", required = false) String principalAlt,         // alias
+            @RequestParam(value = "INCOME_TYPE", required = false, defaultValue = "") String incomeType,
+            @RequestParam(value = "BUSINESS_TYPE", required = false, defaultValue = "") String businessType,
+            @RequestParam(value = "TYPE", required = false, defaultValue = "") String type
     ) {
         try {
-            final String pUser = (UBT_LocalADUuser == null ? "" : UBT_LocalADUuser);
-            final String pCust = (customer == null ? "" : customer);
-            final String pType = (tableType == null ? "" : tableType);
-            final String pBU   = (buAgrupada == null ? "" : buAgrupada);
-            final String pPrin = (principal != null && !principal.isEmpty())
-                    ? principal : (principalAlt == null ? "" : principalAlt);
+            final String principalEff =
+                    (principal != null && !principal.trim().isEmpty())
+                            ? principal.trim()
+                            : (principalAlt != null ? principalAlt.trim() : "");
 
-            net.minidev.json.JSONArray jsonArray = new net.minidev.json.JSONArray();
+            JSONArray root = new JSONArray();
             jdbcTemplate.setResultsMapCaseInsensitive(true);
 
-            // =======================
-            // 1) TOTAL SR (SR_Consult*)
-            // =======================
-            String procedureSRTotals =
-                    rol.equalsIgnoreCase("SR") ? "SR_Totals_SR_Consult(?,?,?,?)"
-                            : rol.equalsIgnoreCase("MM") ? "SR_Totals_SR_Consult_MM(?,?,?,?)"
-                            :                               "SR_Totals_SR_Consult_BUM(?,?,?,?,?)";
+            /* ---------- 1) Totales SR ---------- */
+            String procSRTotals;
+            Object[] paramsSRTotals;
 
-            Object[] paramsSr;
-            if (rol.equalsIgnoreCase("SR") || rol.equalsIgnoreCase("MM")) {
-                // (@UBT_LocalADUuser, @CUSTOMER, @TABLE_TYPE, @PRINCIPAL)
-                paramsSr = new Object[]{ pUser, pCust, pType, pPrin };
+            if ("SR".equalsIgnoreCase(rol)) {
+                // dbo.SR_Totals_SR_Consult(@UBT_LocalADUuser,@CUSTOMER,@TABLE_TYPE,@PRINCIPAL,@INCOME_TYPE,@BUSINESS_TYPE,@TYPE)
+                procSRTotals = "SR_Totals_SR_Consult(?,?,?,?,?,?,?)";
+                paramsSRTotals = new Object[]{
+                        UBT_LocalADUuser, customer, tableType, principalEff,
+                        incomeType, businessType, type
+                };
+            } else if ("MM".equalsIgnoreCase(rol)) {
+                // dbo.SR_Totals_SR_Consult_MM(@UBT_LocalADUuser,@CUSTOMER,@TABLE_TYPE,@PRINCIPAL,@INCOME_TYPE,@BUSINESS_TYPE,@TYPE)
+                procSRTotals = "SR_Totals_SR_Consult_MM(?,?,?,?,?,?,?)";
+                paramsSRTotals = new Object[]{
+                        UBT_LocalADUuser, customer, tableType, principalEff,
+                        incomeType, businessType, type
+                };
             } else {
-                // BUM: (@UBT_LocalADUuser, @CUSTOMER, @TABLE_TYPE, @BU_AGRUPADA, @PRINCIPAL)
-                paramsSr = new Object[]{ pUser, pCust, pType, pBU, pPrin };
+                // dbo.SR_Totals_SR_Consult_BUM(@UBT_LocalADUuser,@CUSTOMER,@TABLE_TYPE,@BU_AGRUPADA,@PRINCIPAL,@INCOME_TYPE,@BUSINESS_TYPE,@TYPE)
+                procSRTotals = "SR_Totals_SR_Consult_BUM(?,?,?,?,?,?,?,?)";
+                paramsSRTotals = new Object[]{
+                        UBT_LocalADUuser, customer, tableType, buAgrupada, principalEff,
+                        incomeType, businessType, type
+                };
             }
 
-            net.minidev.json.JSONArray jsonArraySr = new net.minidev.json.JSONArray();
-            jdbcTemplate.query("{call dbo."+procedureSRTotals+"}", paramsSr, resultSet -> {
-                net.minidev.json.JSONObject jsonMap = new net.minidev.json.JSONObject();
-                java.sql.ResultSetMetaData metaData = resultSet.getMetaData();
-                for (int i = 1; i <= metaData.getColumnCount(); i++) {
-                    jsonMap.put(metaData.getColumnLabel(i), resultSet.getString(i));
+            JSONArray jsonArraySr = new JSONArray();
+            jdbcTemplate.query("{call dbo." + procSRTotals + "}", paramsSRTotals, rs -> {
+                JSONObject row = new JSONObject();
+                ResultSetMetaData md = rs.getMetaData();
+                for (int i = 1; i <= md.getColumnCount(); i++) {
+                    row.put(md.getColumnLabel(i), rs.getString(i));
                 }
-                jsonArraySr.add(jsonMap);
+                jsonArraySr.add(row);
             });
-            jsonArray.add(jsonArraySr);
+            root.add(jsonArraySr);
 
-            // ===================================
-            // 2) TOTAL MANAGEMENT SR (Mgmt_Consult*)
-            // ===================================
-            String procedureMgmtTotals =
-                    rol.equalsIgnoreCase("SR") ? "SR_Totals_Mgmt_Consult(?,?,?,?)"
-                            : rol.equalsIgnoreCase("MM") ? "SR_Totals_Mgmt_Consult_MM(?,?,?,?)"
-                            :                               "SR_Totals_Mgmt_Consult_BUM(?,?,?,?,?)";
+            /* ---------- 2) Totales Management ---------- */
+            String procMgmtTotals;
+            Object[] paramsMgmtTotals;
 
-            Object[] paramsMgmt;
-            if (rol.equalsIgnoreCase("SR") || rol.equalsIgnoreCase("MM")) {
-                // (@UBT_LocalADUuser, @CUSTOMER, @TABLE_TYPE, @PRINCIPAL)
-                paramsMgmt = new Object[]{ pUser, pCust, pType, pPrin };
+            if ("SR".equalsIgnoreCase(rol)) {
+                // dbo.SR_Totals_Mgmt_Consult(@UBT_LocalADUuser,@CUSTOMER,@TABLE_TYPE,@PRINCIPAL,@INCOME_TYPE,@BUSINESS_TYPE,@TYPE)
+                procMgmtTotals = "SR_Totals_Mgmt_Consult(?,?,?,?,?,?,?)";
+                paramsMgmtTotals = new Object[]{
+                        UBT_LocalADUuser, customer, tableType, principalEff,
+                        incomeType, businessType, type
+                };
+            } else if ("MM".equalsIgnoreCase(rol)) {
+                // dbo.SR_Totals_Mgmt_Consult_MM(@UBT_LocalADUuser,@CUSTOMER,@TABLE_TYPE,@PRINCIPAL,@INCOME_TYPE,@BUSINESS_TYPE,@TYPE)
+                procMgmtTotals = "SR_Totals_Mgmt_Consult_MM(?,?,?,?,?,?,?)";
+                paramsMgmtTotals = new Object[]{
+                        UBT_LocalADUuser, customer, tableType, principalEff,
+                        incomeType, businessType, type
+                };
             } else {
-                // BUM: (@UBT_LocalADUuser, @CUSTOMER, @TABLE_TYPE, @BU_AGRUPADA, @PRINCIPAL)
-                paramsMgmt = new Object[]{ pUser, pCust, pType, pBU, pPrin };
+                // dbo.SR_Totals_Mgmt_Consult_BUM(@UBT_LocalADUuser,@CUSTOMER,@TABLE_TYPE,@BU_AGRUPADA,@PRINCIPAL,@INCOME_TYPE,@BUSINESS_TYPE,@TYPE)
+                procMgmtTotals = "SR_Totals_Mgmt_Consult_BUM(?,?,?,?,?,?,?,?)";
+                paramsMgmtTotals = new Object[]{
+                        UBT_LocalADUuser, customer, tableType, buAgrupada, principalEff,
+                        incomeType, businessType, type
+                };
             }
 
-            net.minidev.json.JSONArray jsonArrayMgm = new net.minidev.json.JSONArray();
-            jdbcTemplate.query("{call dbo."+procedureMgmtTotals+"}", paramsMgmt, resultSet -> {
-                net.minidev.json.JSONObject jsonMap = new net.minidev.json.JSONObject();
-                java.sql.ResultSetMetaData metaData = resultSet.getMetaData();
-                for (int i = 1; i <= metaData.getColumnCount(); i++) {
-                    jsonMap.put(metaData.getColumnLabel(i), resultSet.getString(i));
+            JSONArray jsonArrayMgm = new JSONArray();
+            jdbcTemplate.query("{call dbo." + procMgmtTotals + "}", paramsMgmtTotals, rs -> {
+                JSONObject row = new JSONObject();
+                ResultSetMetaData md = rs.getMetaData();
+                for (int i = 1; i <= md.getColumnCount(); i++) {
+                    row.put(md.getColumnLabel(i), rs.getString(i));
                 }
-                jsonArrayMgm.add(jsonMap);
+                jsonArrayMgm.add(row);
             });
-            jsonArray.add(jsonArrayMgm);
+            root.add(jsonArrayMgm);
 
-            return new org.springframework.http.ResponseEntity<>(jsonArray, org.springframework.http.HttpStatus.OK);
+            return new ResponseEntity<>(root, HttpStatus.OK);
         } catch (Exception e) {
             LOG.error("ERROR getTotales -> ", e);
-            return new org.springframework.http.ResponseEntity<>("Error al conectar la BD", org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>("Error al conectar la BD", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
 
 
 
