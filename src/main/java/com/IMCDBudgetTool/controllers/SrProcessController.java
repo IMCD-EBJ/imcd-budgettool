@@ -107,28 +107,29 @@ public class SrProcessController {
                                         @RequestParam(value= "BU_AGRUPADA") String buAgrupada,
                                         @RequestParam(value = "CHECKED") String checked,
                                         @RequestParam(value = "ROL") String rol,
-                                        @RequestParam(value = "TYPE") String type) {
+                                        @RequestParam(value = "TYPE") String type,
+                                        @RequestParam(value = "PRINCIPAL", required = false, defaultValue = "") String principal) {
         try {
             JSONArray jsonArray = new JSONArray();
             jdbcTemplate.setResultsMapCaseInsensitive(true);
-            if (rol.equals("MM")){
-                String usersDelegation = delegationService.getUsersDelegationString(UBT_LocalADUuser, "sr_process", "");
-                //jdbcTemplate.query("{call dbo.SR_Customers_List_Consult(?,?,?,?,?,?)}", new Object[]{usersDelegation, incomeType, businessType, "",checked, rol}, resultSet -> {
-                jdbcTemplate.query("{call dbo.SR_Customers_List_Consult(?,?,?,?,?,?,?)}", new Object[]{UBT_LocalADUuser, incomeType, businessType, buAgrupada,checked, rol, type}, resultSet -> {
-                    JSONObject jsonMap = new JSONObject();
-                    jsonMap.put("name", resultSet.getString("name"));
-                    jsonMap.put("id", resultSet.getString("id"));
-                    jsonArray.add(jsonMap);
-                });
-            }else{
-                jdbcTemplate.query("{call dbo.SR_Customers_List_Consult(?,?,?,?,?,?,?)}", new Object[]{UBT_LocalADUuser, incomeType, businessType, buAgrupada,checked, rol, type}, resultSet -> {
-                    JSONObject jsonMap = new JSONObject();
-                    jsonMap.put("name", resultSet.getString("name"));
-                    jsonMap.put("id", resultSet.getString("id"));
-                    jsonArray.add(jsonMap);
-                });
-            }
 
+            jdbcTemplate.query("{call dbo.SR_Customers_List_Consult(?,?,?,?,?,?,?,?)}",
+                    new Object[]{
+                            (UBT_LocalADUuser == null ? "" : UBT_LocalADUuser),
+                            (incomeType      == null ? "" : incomeType),
+                            (businessType    == null ? "" : businessType),
+                            (buAgrupada      == null ? "" : buAgrupada),
+                            (checked         == null ? "0" : checked),
+                            (rol             == null ? "" : rol),
+                            (type            == null ? "" : type),
+                            (principal       == null ? "" : principal)   // <-- PRINCIPAL (8º)
+                    },
+                    resultSet -> {
+                        JSONObject jsonMap = new JSONObject();
+                        jsonMap.put("name", resultSet.getString("name"));
+                        jsonMap.put("id",   resultSet.getString("id"));
+                        jsonArray.add(jsonMap);
+                    });
 
             return new ResponseEntity<Object>(jsonArray, HttpStatus.OK);
         } catch (Exception e) {
@@ -145,37 +146,48 @@ public class SrProcessController {
             @RequestParam(value = "businessType", required = false) String businessType,
             @RequestParam(value = "customer", required = false) String customer,
             @RequestParam(value = "principal", required = false) String principal,
-            @RequestParam(value = "PRINCIPAL", required = false) String principalAlt, // alias por si viene en mayúsculas
+            @RequestParam(value = "PRINCIPAL", required = false) String principalAlt, // alias por si llega en mayúsculas
             @RequestParam(value = "ROL", required = false, defaultValue = "") String rol,
             @RequestParam(value = "CHECKED", required = false, defaultValue = "0") Integer checked,
             @RequestParam(value = "TYPE", required = false, defaultValue = "") String type
     ) {
         try {
-            String principalEff = (principal != null && !principal.isEmpty()) ? principal : principalAlt;
+            // Usa principal si viene en cualquiera de los dos nombres
+            final String principalEff =
+                    (principal != null && !principal.isEmpty()) ? principal :
+                            (principalAlt == null ? "" : principalAlt);
+
+            // ⚠️ Clave: NO invoques delegations para SR puro (puede lanzar y cortar la petición)
+            final String usersDelegation =
+                    ("MM".equalsIgnoreCase(rol) || "BUM".equalsIgnoreCase(rol))
+                            ? delegationService.getUsersDelegationString(UBT_LocalADUuser, "sr_process", "")
+                            : "";
 
             JSONArray jsonArray = new JSONArray();
             jdbcTemplate.setResultsMapCaseInsensitive(true);
 
-            String usersDelegation = delegationService.getUsersDelegationString(UBT_LocalADUuser, "sr_process", "");
-
-            // ⚠️ Ajusta al SP real que usas para las líneas de cliente y AÑADE @PRINCIPAL en la firma del SP
             jdbcTemplate.query(
                     "{call dbo.SR_Customer_Lines_Consult(?,?,?,?,?,?,?,?,?)}",
                     ps -> {
-                        ps.setString(1, UBT_LocalADUuser);
-                        ps.setString(2, usersDelegation);
-                        ps.setString(3, businessType);
-                        ps.setString(4, incomeType);
-                        ps.setString(5, customer);
-                        ps.setString(6, principalEff);     // <-- NUEVO
-                        ps.setString(7, rol);
-                        ps.setInt(8, (checked != null) ? checked : 0);
-                        ps.setString(9, type);
+                        ps.setString(1, UBT_LocalADUuser);                              // @UBT_LocalADUuser
+                        ps.setString(2, usersDelegation);                               // @UsersDelegation
+                        ps.setString(3, businessType == null ? "" : businessType);      // @BUSINESS_TYPE
+                        ps.setString(4, incomeType  == null ? "" : incomeType);         // @INCOME_TYPE
+                        ps.setString(5, customer    == null ? "" : customer);           // @CUSTOMER
+                        ps.setString(6, principalEff);                                   // @PRINCIPAL
+                        ps.setString(7, rol == null ? "" : rol);                        // @ROL
+                        ps.setString(8, String.valueOf(checked != null ? checked : 0)); // @CHECKED (texto)
+                        ps.setString(9, type == null ? "" : type);                      // @TYPE
                     },
                     rs -> {
+                        // Mapeo genérico por etiqueta de columna para evitar ColumnNotFound
                         net.minidev.json.JSONObject row = new net.minidev.json.JSONObject();
-                        // mapear tus columnas actuales...
-                        row.put("PRINCIPAL", rs.getString("PRINCIPAL")); // opcional mostrarlo
+                        java.sql.ResultSetMetaData md = rs.getMetaData();
+                        int cols = md.getColumnCount();
+                        for (int i = 1; i <= cols; i++) {
+                            String label = md.getColumnLabel(i);
+                            row.put(label, rs.getString(i));
+                        }
                         jsonArray.add(row);
                     }
             );
@@ -186,7 +198,6 @@ public class SrProcessController {
             return new ResponseEntity<>("Error al conectar la BD", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-
 
     @GetMapping("/srProcess/getSelectOptionsBudgetData")
     public ResponseEntity getSelectOptionsBudgetData() {
@@ -357,99 +368,129 @@ public class SrProcessController {
     }
 
     @GetMapping("/srProcess/getTotales")
-    public ResponseEntity<Object> getTotales(
-            @RequestParam("UBT_LocalADUuser") String UBT_LocalADUuser,
-            @RequestParam(value = "customer", required = false) String customer,
-            @RequestParam("TABLE_TYPE") String tableType,
-            @RequestParam(value = "ROL", required = false, defaultValue = "") String rol,
-            @RequestParam(value = "BU_AGRUPADA", required = false, defaultValue = "") String buAgrupada,
+    public org.springframework.http.ResponseEntity<Object> getTotales(
+            @RequestParam(value = "UBT_LocalADUuser") String UBT_LocalADUuser,
+            @RequestParam(value = "customer") String customer,
+            @RequestParam(value = "TABLE_TYPE") String tableType,
+            @RequestParam(value = "BU_AGRUPADA") String buAgrupada,
+            @RequestParam(value = "ROL") String rol,
             @RequestParam(value = "principal", required = false) String principal,
-            @RequestParam(value = "PRINCIPAL", required = false) String principalAlt // alias
+            @RequestParam(value = "PRINCIPAL", required = false) String principalAlt
     ) {
         try {
-            String principalEff = (principal != null && !principal.isEmpty()) ? principal : principalAlt;
+            final String pUser = (UBT_LocalADUuser == null ? "" : UBT_LocalADUuser);
+            final String pCust = (customer == null ? "" : customer);
+            final String pType = (tableType == null ? "" : tableType);
+            final String pBU   = (buAgrupada == null ? "" : buAgrupada);
+            final String pPrin = (principal != null && !principal.isEmpty())
+                    ? principal : (principalAlt == null ? "" : principalAlt);
 
-            JSONArray jsonArray = new JSONArray();
+            net.minidev.json.JSONArray jsonArray = new net.minidev.json.JSONArray();
             jdbcTemplate.setResultsMapCaseInsensitive(true);
 
-            String usersDelegation = delegationService.getUsersDelegationString(UBT_LocalADUuser, "sr_process", "");
+            // =======================
+            // 1) TOTAL SR (SR_Consult*)
+            // =======================
+            String procedureSRTotals =
+                    rol.equalsIgnoreCase("SR") ? "SR_Totals_SR_Consult(?,?,?,?)"
+                            : rol.equalsIgnoreCase("MM") ? "SR_Totals_SR_Consult_MM(?,?,?,?)"
+                            :                               "SR_Totals_SR_Consult_BUM(?,?,?,?,?)";
 
-            // Selección de SP por rol (igual que ya haces), pero AÑADIENDO @PRINCIPAL
-            String procCall;
-            if ("MM".equalsIgnoreCase(rol) || "SR".equalsIgnoreCase(rol)) {
-                // Ejemplo MM/SR
-                procCall = "{call dbo.SR_Totals_SR_Consult_MM(?,?,?,?,?,?)}"; // +@PRINCIPAL
-                jdbcTemplate.query(procCall,
-                        ps -> {
-                            ps.setString(1, UBT_LocalADUuser);
-                            ps.setString(2, usersDelegation);
-                            ps.setString(3, customer);
-                            ps.setString(4, tableType);
-                            ps.setString(5, buAgrupada);
-                            ps.setString(6, principalEff); // <-- NUEVO
-                        },
-                        rs -> {
-                            net.minidev.json.JSONObject row = new net.minidev.json.JSONObject();
-                            // mapear columnas actuales...
-                            jsonArray.add(row);
-                        });
+            Object[] paramsSr;
+            if (rol.equalsIgnoreCase("SR") || rol.equalsIgnoreCase("MM")) {
+                // (@UBT_LocalADUuser, @CUSTOMER, @TABLE_TYPE, @PRINCIPAL)
+                paramsSr = new Object[]{ pUser, pCust, pType, pPrin };
             } else {
-                // Ejemplo BUM
-                procCall = "{call dbo.SR_Totals_SR_Consult_BUM(?,?,?,?,?,?,?)}"; // +@PRINCIPAL
-                jdbcTemplate.query(procCall,
-                        ps -> {
-                            ps.setString(1, UBT_LocalADUuser);
-                            ps.setString(2, usersDelegation);
-                            ps.setString(3, customer);
-                            ps.setString(4, tableType);
-                            ps.setString(5, buAgrupada);
-                            ps.setString(6, rol);
-                            ps.setString(7, principalEff); // <-- NUEVO
-                        },
-                        rs -> {
-                            net.minidev.json.JSONObject row = new net.minidev.json.JSONObject();
-                            // mapear columnas actuales...
-                            jsonArray.add(row);
-                        });
+                // BUM: (@UBT_LocalADUuser, @CUSTOMER, @TABLE_TYPE, @BU_AGRUPADA, @PRINCIPAL)
+                paramsSr = new Object[]{ pUser, pCust, pType, pBU, pPrin };
             }
 
-            return new ResponseEntity<>(jsonArray, HttpStatus.OK);
+            net.minidev.json.JSONArray jsonArraySr = new net.minidev.json.JSONArray();
+            jdbcTemplate.query("{call dbo."+procedureSRTotals+"}", paramsSr, resultSet -> {
+                net.minidev.json.JSONObject jsonMap = new net.minidev.json.JSONObject();
+                java.sql.ResultSetMetaData metaData = resultSet.getMetaData();
+                for (int i = 1; i <= metaData.getColumnCount(); i++) {
+                    jsonMap.put(metaData.getColumnLabel(i), resultSet.getString(i));
+                }
+                jsonArraySr.add(jsonMap);
+            });
+            jsonArray.add(jsonArraySr);
+
+            // ===================================
+            // 2) TOTAL MANAGEMENT SR (Mgmt_Consult*)
+            // ===================================
+            String procedureMgmtTotals =
+                    rol.equalsIgnoreCase("SR") ? "SR_Totals_Mgmt_Consult(?,?,?,?)"
+                            : rol.equalsIgnoreCase("MM") ? "SR_Totals_Mgmt_Consult_MM(?,?,?,?)"
+                            :                               "SR_Totals_Mgmt_Consult_BUM(?,?,?,?,?)";
+
+            Object[] paramsMgmt;
+            if (rol.equalsIgnoreCase("SR") || rol.equalsIgnoreCase("MM")) {
+                // (@UBT_LocalADUuser, @CUSTOMER, @TABLE_TYPE, @PRINCIPAL)
+                paramsMgmt = new Object[]{ pUser, pCust, pType, pPrin };
+            } else {
+                // BUM: (@UBT_LocalADUuser, @CUSTOMER, @TABLE_TYPE, @BU_AGRUPADA, @PRINCIPAL)
+                paramsMgmt = new Object[]{ pUser, pCust, pType, pBU, pPrin };
+            }
+
+            net.minidev.json.JSONArray jsonArrayMgm = new net.minidev.json.JSONArray();
+            jdbcTemplate.query("{call dbo."+procedureMgmtTotals+"}", paramsMgmt, resultSet -> {
+                net.minidev.json.JSONObject jsonMap = new net.minidev.json.JSONObject();
+                java.sql.ResultSetMetaData metaData = resultSet.getMetaData();
+                for (int i = 1; i <= metaData.getColumnCount(); i++) {
+                    jsonMap.put(metaData.getColumnLabel(i), resultSet.getString(i));
+                }
+                jsonArrayMgm.add(jsonMap);
+            });
+            jsonArray.add(jsonArrayMgm);
+
+            return new org.springframework.http.ResponseEntity<>(jsonArray, org.springframework.http.HttpStatus.OK);
         } catch (Exception e) {
             LOG.error("ERROR getTotales -> ", e);
-            return new ResponseEntity<>("Error al conectar la BD", HttpStatus.INTERNAL_SERVER_ERROR);
+            return new org.springframework.http.ResponseEntity<>("Error al conectar la BD", org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
 
 
     @GetMapping("/srProcess/listPrincipals")
     public ResponseEntity<Object> listPrincipals(
             @RequestParam("UBT_LocalADUuser") String UBT_LocalADUuser,
-            @RequestParam(value = "incomeType", required = false) String incomeType,
-            @RequestParam(value = "businessType", required = false) String businessType,
+            @RequestParam(value = "incomeType",  required = false) String incomeType,
+            @RequestParam(value = "businessType",required = false) String businessType,
             @RequestParam(value = "BU_AGRUPADA", required = false, defaultValue = "") String buAgrupada,
-            @RequestParam(value = "CHECKED", required = false, defaultValue = "0") Integer checked,
-            @RequestParam(value = "ROL", required = false, defaultValue = "") String rol,
-            @RequestParam(value = "TYPE", required = false, defaultValue = "") String type
+            @RequestParam(value = "CHECKED",     required = false, defaultValue = "0") Integer checked,
+            @RequestParam(value = "ROL",         required = false, defaultValue = "") String rol,
+            @RequestParam(value = "TYPE",        required = false, defaultValue = "") String type
     ) {
         try {
             JSONArray jsonArray = new JSONArray();
             jdbcTemplate.setResultsMapCaseInsensitive(true);
 
-            // Delegaciones (igual que haces en el resto de endpoints MM/BUM)
-            String usersDelegation = delegationService.getUsersDelegationString(UBT_LocalADUuser, "sr_process", "");
+            // Para SR no lo usas: pasa vacío (evita cadenas largas o nulls)
+            final String usersDelegation = "";
 
-            // SP de catálogo de PRINCIPAL -> devuelve columnas: id, name
+            // Coalesce TODO a String (el SP espera NVARCHAR en TODAS las posiciones)
+            final String p1 = UBT_LocalADUuser;
+            final String p2 = usersDelegation;
+            final String p3 = (businessType == null) ? "" : businessType;
+            final String p4 = (incomeType  == null) ? "" : incomeType;
+            final String p5 = (buAgrupada  == null) ? "" : buAgrupada;
+            final String p6 = String.valueOf((checked != null) ? checked : 0); // <- clave: texto
+            final String p7 = (rol         == null) ? "" : rol;
+            final String p8 = (type        == null) ? "" : type;
+
             jdbcTemplate.query(
                     "{call dbo.SR_Principal_List_Consult(?,?,?,?,?,?,?,?)}",
                     ps -> {
-                        ps.setString(1, UBT_LocalADUuser);
-                        ps.setString(2, usersDelegation);          // si no aplica, pasa ""
-                        ps.setString(3, businessType);
-                        ps.setString(4, incomeType);
-                        ps.setString(5, buAgrupada);
-                        ps.setInt(6, (checked != null) ? checked : 0);
-                        ps.setString(7, rol);
-                        ps.setString(8, type);                     // flags de tu UI (A/B/C, etc.) si los usas
+                        ps.setString(1, p1);
+                        ps.setString(2, p2);
+                        ps.setString(3, p3);
+                        ps.setString(4, p4);
+                        ps.setString(5, p5);
+                        ps.setString(6, p6);  // CHECKED como String
+                        ps.setString(7, p7);
+                        ps.setString(8, p8);
                     },
                     rs -> {
                         net.minidev.json.JSONObject row = new net.minidev.json.JSONObject();
@@ -465,7 +506,5 @@ public class SrProcessController {
             return new ResponseEntity<>("Error al consultar PRINCIPAL", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-
-
 
 }

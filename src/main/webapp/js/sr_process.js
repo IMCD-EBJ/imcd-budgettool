@@ -13,6 +13,7 @@ var UbT_LocalADUuser;
 var typedChecked = ['A', 'B', 'C'];
 var requiredFields = [];
 var maxVariationQuantity;
+
 $(document).ready(function () {
     UbT_LocalADUuser = userLogged.UbT_LocalADUuser;
     clean();
@@ -26,11 +27,10 @@ $(document).ready(function () {
         button.disabled = true;
     });
     createTablesTotales();
-    ;
+
     arrayInputsOrdenados = Array.from(document.querySelectorAll('input.editable')).sort((a, b) => {
         var idA = parseInt(a.id.split('/')[1]);
         var idB = parseInt(b.id.split('/')[1]);
-
         return idA - idB;
     });
 
@@ -58,7 +58,6 @@ async function getActualStatus() {
     $.get({
         url: URLBACKEND + "srProcess/getActualStatus?UBT_LocalADUuser=" + UbT_LocalADUuser
             + "&BU_AGRUPADA=" + userLogged.bu_agrupada
-            //+ "&ROL=" + ((esBUM) ? "BUM" : "SR"),
             + "&ROL=" + ((esBUM) ? "BUM" : (esMM) ? "MM" : 'SR'),
         type: 'Get'
     }).then(data => {
@@ -75,11 +74,12 @@ async function loadPrincipals() {
     $("#select-principal").find('option').remove();
     $("#select-principal").append('<option value="">select an option</option>');
 
+    // listPrincipals espera incomeType y businessType en minúsculas
     await loadDropDown(
         $("#select-principal"),
         "srProcess/listPrincipals?UBT_LocalADUuser=" + UbT_LocalADUuser
-            + "&INCOME_TYPE=" + encodeURIComponent(incomeType || '')
-            + "&BUSINESS_TYPE=" + encodeURIComponent(businessType || '')
+            + "&incomeType=" + encodeURIComponent(incomeType || '')
+            + "&businessType=" + encodeURIComponent(businessType || '')
             + "&BU_AGRUPADA=" + userLogged.bu_agrupada
             + "&CHECKED=" + checkedValue
             + "&ROL=" + ((esBUM) ? "BUM" : (esMM) ? "MM" : 'SR')
@@ -128,36 +128,79 @@ async function onSelectPrincipalChange() {
     }
 }
 
+function toNumberSafe(v) {
+    if (v === null || v === undefined || v === '' || isNaN(v)) return 0;
+    const n = Number(v);
+    return isNaN(n) ? 0 : n;
+}
+
+function formatValue(key, value) {
+    // value puede venir string/number/null
+    const val = (value === null || value === undefined) ? 0 : value;
+    let valueObject;
+    if (key.includes('VAR')) {
+        valueObject = (Math.round((parseFloat(val) + Number.EPSILON) * 10) / 10).toString().replaceAll('.', ',')
+    } else if (key.includes('PERC')) {
+        valueObject = (Math.round((parseFloat(val) + Number.EPSILON) * 100) / 100).toString().replaceAll('.', ',');
+    } else if (key.includes('QTY')) {
+        valueObject = String(val).replaceAll('.', ',');
+    } else {
+        valueObject = putThousandsMask(Math.round(toNumberSafe(val)));
+    }
+    return valueObject;
+}
+
+function flattenTotalsPayload(data) {
+    // Admite:
+    //  - [ {k:v, ...}, {k:v,...} ]
+    //  - [ [ {k:v,...} ] ]
+    //  - {k:v,...}
+    // Devuelve: array de objetos (filas)
+    if (!data) return [];
+    if (Array.isArray(data)) {
+        // Si es array y sus elementos son arrays, aplana
+        const flat = [];
+        data.forEach(item => {
+            if (Array.isArray(item)) {
+                item.forEach(inner => { if (inner && typeof inner === 'object') flat.push(inner); });
+            } else if (item && typeof item === 'object') {
+                flat.push(item);
+            }
+        });
+        return flat;
+    }
+    if (typeof data === 'object') return [data];
+    return [];
+}
 
 async function getValuesForTotales(tableType, customer) {
     const principal = $('#select-principal').val() || '';
     $.get({
         url: URLBACKEND + "srProcess/getTotales?UBT_LocalADUuser=" + UbT_LocalADUuser
-            + "&customer=" + customer
-            + "&TABLE_TYPE=" + tableType
-            + "&PRINCIPAL=" + encodeURIComponent(principal)     // <-- NUEVO
+            + "&customer=" + (customer || '')
+            + "&TABLE_TYPE=" + (tableType || '')
+            + "&PRINCIPAL=" + encodeURIComponent(principal)
             + "&BU_AGRUPADA=" + userLogged.bu_agrupada
             + "&ROL=" + ((esBUM) ? "BUM" : (esMM) ? "MM" : 'SR'),
         type: 'Get'
     }).then(data => {
-        data.forEach(arrayInputs => {
-            arrayInputs.forEach(dataInputs => {
-                Object.entries(dataInputs).forEach(([key, value]) => {
-                    var valueObject;
-                    if (key.includes('VAR')) {
-                        valueObject = (Math.round((parseFloat(value) + Number.EPSILON) * 10) / 10).toString().replaceAll('.', ',')
-                    } else if (key.includes('PERC')) {
-                        valueObject = (Math.round((parseFloat(value) + Number.EPSILON) * 100) / 100).toString().replaceAll('.', ',');
-                    } else if (key.includes('QTY')) {
-                        valueObject = value.replaceAll('.', ',');
-                    } else {
-                        valueObject = putThousandsMask(Math.round(value));
-                    }
-                    if (!key.includes('/LYR/VAR'))
-                        document.getElementById(key).value = valueObject;
-                });
+        const rows = flattenTotalsPayload(data);
+
+        // Si no hay filas, no es error: simplemente dejamos los inputs como están / en 0
+        if (!rows.length) return;
+
+        rows.forEach(rowObj => {
+            Object.entries(rowObj).forEach(([key, value]) => {
+                if (!key) return;
+                const valueObject = formatValue(key, value);
+                if (!key.includes('/LYR/VAR')) {
+                    const el = document.getElementById(key);
+                    if (el) el.value = valueObject;
+                }
             });
         });
+    }).catch(() => {
+        // Evita romper la UI si el backend devuelve vacío/500
     });
 }
 
@@ -201,22 +244,14 @@ function createTablesTotales() {
     tablesTotalSR.forEach(table => {
         var tableName = table.getAttribute('name');
         var configTable = {'isTotales': true, 'tableName': tableName};
-        if (tableName == 'totalMgmSR') {
-            configTable['withHeaders'] = true;
-        } else {
-            configTable['withHeaders'] = false;
-        }
+        configTable['withHeaders'] = (tableName == 'totalMgmSR');
         table.append(createTbodyTable('totalSR/' + tableName, table, configTable));
     });
 
     tablesTotalCustomer.forEach(table => {
         var tableName = table.getAttribute('name');
         var configTable = {'isTotales': true, 'tableName': tableName};
-        if (tableName == 'totalMgmSR') {
-            configTable['withHeaders'] = true;
-        } else {
-            configTable['withHeaders'] = false;
-        }
+        configTable['withHeaders'] = (tableName == 'totalMgmSR');
         table.append(createTbodyTable('totalCustomer/' + tableName, table, configTable));
     });
 }
@@ -238,7 +273,6 @@ function createTbodyTable(prefixIdInput, table, configTable) {
     return tbody;
 }
 
-
 function createTrTbodyTotales(prefixIdInput, configHeader, thArray, tableName) {
     var tr = document.createElement('tr');
     if (configHeader.display) {
@@ -252,7 +286,6 @@ function createTrTbodyTotales(prefixIdInput, configHeader, thArray, tableName) {
     }
 
     thArray.forEach(th => {
-        //if (th.name != 'VAR' || configHeader.header.id != 'LYR' || tableName != 'totalMgmSR') {
         if (th.name != 'VAR' || configHeader.header.id != 'LYR') {
             var td = document.createElement('td');
             td.appendChild(createInput(prefixIdInput + '/' + th.name, th.editable));
@@ -263,7 +296,6 @@ function createTrTbodyTotales(prefixIdInput, configHeader, thArray, tableName) {
 }
 
 function createInput(idInput, editable, hidden, functionOnChange) {
-
     var input = document.createElement('input');
     input.name = idInput;
     input.id = idInput;
@@ -482,7 +514,6 @@ function getGMPercRoyData(data) {
     })
 }
 
-
 async function getTableBDGData(data) {
 
     const tablePercentage = document.getElementById('tableBDG');
@@ -514,7 +545,6 @@ async function getTableBDGData(data) {
     }
 }
 
-
 function createFilaDatos(firstTrConfig, table, customer, index, functionOnChange) {
     var thArray = Array.from(table.querySelectorAll('th')).filter(th =>
         th.getAttribute('name') != null && th.getAttribute('colspan') == null
@@ -524,7 +554,6 @@ function createFilaDatos(firstTrConfig, table, customer, index, functionOnChange
 
     const firstTr = document.createElement('tr');
     firstTr.setAttribute('index', index);
-
 
     firstTrConfig.forEach(tdConfig => {
         var td = document.createElement('td');
@@ -584,7 +613,6 @@ function calcTotalesQtyRoy(indexCustomer, qtyFcs, invFCS, gmFCS) {
     var gmLYRTotalSRTotalSR = document.getElementById('totalSR/totalSR/LYR/GM');
     var gmLYRCustomerTotalTotalSR = document.getElementById('totalCustomer/totalSR/LYR/GM');
 
-
     var qtyFCSOriginal = parseInt(dataCustomerModificada[indexCustomer]['QTY FCS']);
     qtyFCSTotalSRTotalSR.value = parseFloat((qtyFCSTotalSRTotalSR.value.replaceAll(',', '.'))) - qtyFCSOriginal + parseInt(qtyFcs.value);
     qtyFCSCustomerTotalTotalSR.value = parseFloat((qtyFCSCustomerTotalTotalSR.value.replaceAll(',', '.'))) - qtyFCSOriginal + parseInt(qtyFcs.value);
@@ -592,7 +620,6 @@ function calcTotalesQtyRoy(indexCustomer, qtyFcs, invFCS, gmFCS) {
 
     var invFCSTotalSRTotalSR = document.getElementById('totalSR/totalSR/FCS/INV');
     var invFCSCustomerTotalSR = document.getElementById('totalCustomer/totalSR/FCS/INV');
-
 
     var invFCSOriginal = parseInt(dataCustomerModificada[indexCustomer]['INV FCS']);
     invFCSTotalSRTotalSR.value = putThousandsMask(parseInt(removeThousandsMask(invFCSTotalSRTotalSR.value)) - invFCSOriginal + parseInt(invFCS.value));
@@ -666,12 +693,9 @@ function calcQtyRoy() {
     costRoy.value = (parseFloat(invRoy.value) - parseFloat(gmRoy.value)).toString();
     costFCS.value = (parseFloat(invFCS.value) - parseFloat(gmFCS.value)).toString();
 
-
     calcTotalesQtyRoy(indexCustomer, qtyFcs, invFCS, gmFCS);
 
     printInTableLinesCustomer(dataCustomer);
-    //calcGMRoy(indexCustomer);
-
 }
 
 function calcGMRoy(index) {
@@ -743,7 +767,6 @@ function calcTotalesQtyBDG(indexCustomer, qtyBDG, invBDG, gmBDG) {
     var gmFCSTotalSRTotalSR = document.getElementById('totalSR/totalSR/FCS/GM');
     var gmFCSTotalCustomerTotalSR = document.getElementById('totalCustomer/totalSR/FCS/GM');
 
-
     qtyBDGTotalSRTotalSR.value = putThousandsMask(parseInt(removeThousandsMask(qtyBDGTotalSRTotalSR.value)) - qtyBDGOriginal + parseInt(qtyBDG.value));
     qtyBDGcustomerTotalSR.value = putThousandsMask(parseInt(removeThousandsMask(qtyBDGcustomerTotalSR.value)) - qtyBDGOriginal + parseInt(qtyBDG.value));
     dataCustomerModificada[indexCustomer]['QTY BDG'] = qtyBDG.value;
@@ -769,7 +792,6 @@ function calcTotalesQtyBDG(indexCustomer, qtyBDG, invBDG, gmBDG) {
     gmpBDGTotalSRTotalSR.value = (Math.round((gmpBDGTotalSRTotalSRNewValue + Number.EPSILON) * 100) / 100).toString().replaceAll('.', ',');
     gmpBDGcustomerTotalSR.value = (Math.round((gmpBDGcustomerTotalSRNewValue + Number.EPSILON) * 100) / 100).toString().replaceAll('.', ',');
 
-
     var qtyFCSTotalSRTotalSR = document.getElementById('totalSR/totalSR/FCS/QTY');
     var qtyFCSCustomerTotalTotalSR = document.getElementById('totalCustomer/totalSR/FCS/QTY');
 
@@ -781,8 +803,6 @@ function calcTotalesQtyBDG(indexCustomer, qtyBDG, invBDG, gmBDG) {
 
     var valueVarPerc = (((parseInt(removeThousandsMask(gmBDGcustomerTotalSR.value)) / parseInt(removeThousandsMask(gmFCSTotalCustomerTotalSR.value)) - 1) * 100)).toString()
     varPercQtyBdgVsFcsCustomerTotalSR.value = (Math.round((parseFloat(valueVarPerc) + Number.EPSILON) * 10) / 10).toString().replaceAll('.', ',')
-
-
 }
 
 function calcQtyBdg(dataCustomer, indexCustomer) {
@@ -802,7 +822,6 @@ function calcQtyBdg(dataCustomer, indexCustomer) {
     gmpBDG.value = (parseFloat(gmBDG.value) / parseFloat(invBDG.value) * 100).toString();
     costBDG.value = (parseFloat(invBDG.value) - parseFloat(gmBDG.value)).toString();
     calcTotalesQtyBDG(indexCustomer, qtyBDG, invBDG, gmBDG);
-
 }
 
 function calcPercBdg(dataCustomer, indexCustomer) {
@@ -855,7 +874,6 @@ function printInTableLinesCustomer(dataCustomer) {
     setZeroValueInputsNaN();
 }
 
-
 async function onSelectBusinessType() {
     var businessType = $('#select-businessType').val();
     $("#select-incomeType").find('option').remove();
@@ -872,8 +890,6 @@ async function onSelectBusinessType() {
     } else {
         await onSelectIncomeType();
     }
-
-
 }
 
 async function onSelectIncomeType() {
@@ -913,7 +929,6 @@ async function onSelectIncomeType() {
     }
 }
 
-
 async function onSelectCustomerChange() {
     var businessType = $('#select-businessType').val();
     var incomeType = $('#select-incomeType').val();
@@ -925,7 +940,7 @@ async function onSelectCustomerChange() {
             + "&incomeType=" + encodeURIComponent(incomeType || '')
             + "&businessType=" + encodeURIComponent(businessType || '')
             + "&customer=" + customer
-            + "&principal=" + encodeURIComponent(principal)     // <-- NUEVO
+            + "&principal=" + encodeURIComponent(principal)
             + "&ROL=" + ((esBUM) ? "BUM" : (esMM) ? "MM" : 'SR')
             + "&CHECKED=" + checkedValue
             + "&TYPE=" + encodeURIComponent(typedChecked.toString()),
@@ -956,12 +971,10 @@ async function onSelectCustomerChange() {
     arrayInputsOrdenados = Array.from(document.querySelectorAll('input.editable')).sort((a, b) => {
         var idA = parseInt(a.id.split('/')[1]);
         var idB = parseInt(b.id.split('/')[1]);
-
         return idA - idB;
     });
     updateSelectedOption('select-customer');
 }
-
 
 function validateForm() {
     var requiredValuesBool = requiredValues();
@@ -987,12 +1000,10 @@ function checkCorrectValue() {
     return valuesCorrect;
 }
 
-
 function requiredValues() {
     var valoresRequeridosContestados = true;
     requiredFields.forEach(field => {
         var select = document.getElementById(field.id);
-        //Check if selected option is greater than the first option in the select element
         if (select.selectedIndex == 0) {
             valoresRequeridosContestados = false;
         }
@@ -1029,7 +1040,6 @@ async function save() {
                 if (divs.length > 0) {
                     divs.forEach(div => {
                         var key = div.id.split('/')[0]
-
                         object[key] = div.innerText;
                     });
                 }
@@ -1080,15 +1090,13 @@ async function clean(e) {
 
     totalSRText.innerText = "Total SR: " + capitalizeFirstLetterString(userLogged.UBT_UserName);
     await onSelectBusinessType();
-    //nextSelectedOption('select-businessType');
-    //updateSelectedOption('select-customer');
+
     Array.from(document.querySelectorAll('#divTables table')).forEach(table => {
         $('#' + table.id + ' tbody').empty();
     });
 
     blockInputs();
 }
-
 
 function blockInputs() {
     Array.from(document.querySelectorAll('#divTables table input')).forEach(input => {
@@ -1141,11 +1149,10 @@ function downloadExcelSr() {
         + "?REPORT_NAME=" + reportName
         + "&LocalADUser=" + userLogged.UbT_LocalADUuser
         + "&BUAGRUPADA=" + userLogged.bu_agrupada
-        + "&PRINCIPAL=" + encodeURIComponent(principal),    // <-- NUEVO
+        + "&PRINCIPAL=" + encodeURIComponent(principal),
         "_blank"
     );
 }
-
 
 function checkCambiosRealizados() {
     var inputs = Array.from(document.querySelectorAll('input.editable'));
@@ -1167,7 +1174,6 @@ function getDataFromInputs(formId) {
     });
 
     return dataInputs;
-
 }
 
 function parseData(data, formId) {
