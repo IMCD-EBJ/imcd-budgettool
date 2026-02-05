@@ -1,0 +1,1133 @@
+/* ===================================================================
+   IMCD Mosaic — Corporate UI
+   File: imcd-style.css
+   Compatible: Bootstrap 4.5
+   =================================================================== */
+
+/* -------------------------------
+   Design tokens (IMCD brand)
+   ------------------------------- */
+:root{
+  /* Brand */
+  --imcd-brand-900:#0a2b6b;
+  --imcd-brand-800:#113c8b;
+  --imcd-brand-700:#1551b5;
+  --imcd-brand-600:#1f6df0;
+  --imcd-brand-500:#3d8bfd;    /* primary */
+  --imcd-brand-400:#5b9dff;
+  --imcd-brand-200:#e7f0ff;
+  --imcd-brand-100:#f3f8ff;
+
+  --imcd-accent:#00b3cc;
+  --imcd-success:#1f9d55;
+  --imcd-warning:#cc8b00;
+  --imcd-danger:#c0362c;
+
+  --imcd-text:#1e293b;
+  --imcd-muted:#64748b;
+
+  --imcd-bg:#f6f9ff;
+  --imcd-surface:#ffffff;
+
+  --imcd-border:#e6eefc;
+  --imcd-shadow:0 8px 20px rgba(13,35,69,.06);
+
+  --imcd-radius-xs:6px;
+  --imcd-radius-sm:10px;
+  --imcd-radius:12px;
+  --imcd-radius-xl:16px;
+
+  --imcd-focus:0 0 0 3px rgba(61,139,253,.25);
+
+  --footer-h:64px;
+
+  /* Layout */
+  --imcd-header-h: 56px;
+  --imcd-sidebar-w: 264px;
+  --imcd-sidebar-mini: 80px;
+  --imcd-blue-1:#294586;
+  --imcd-blue-2:#21376d;
+}
+
+/* -------------------------------
+   Base / resets suaves
+   ------------------------------- */
+html,body{
+  height:100%;
+  background:var(--imcd-bg);
+  color:var(--imcd-text);
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+body{
+  font-family: system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans","Liberation Sans","Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol",sans-serif;
+  line-height:1.45;
+}
+a{ color:var(--imcd-brand-700); }
+a:hover{ color:var(--imcd-brand-900); text-decoration:none; }
+small,.small{ color:var(--imcd-muted); }
+
+/* Layout contenedor */
+.wrapper{ display:flex; min-height:100vh; width:100%; }
+#content{
+  flex:1 1 auto; min-width:0;
+  padding: calc(var(--imcd-header-h) + 16px) 16px 16px 16px; /* hueco para header fijo */
+  margin-left: var(--imcd-sidebar-w);                        /* hueco para sidebar */
+  padding-bottom: calc(var(--footer-h) + 8px);
+}
+
+/* -------------------------------
+   Header fijo (Mosaic Tool)
+   ------------------------------- */
+.imcd-topbar{
+  position: fixed; top:0; left: var(--imcd-sidebar-w); right:0;
+  height: var(--imcd-header-h);
+  display:flex; align-items:center; justify-content:space-between;
+  padding: 0 16px;
+  background: rgba(255,255,255,.94);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(20,40,90,.08);
+  z-index: 1035;
+}
+body.sidebar-mini .imcd-topbar{ left: var(--imcd-sidebar-mini); }
+
+/* Izquierda: logo + texto Mosaic Tool */
+.imcd-topbar .left{
+  display:flex; align-items:center; gap:10px; min-width: 200px;
+}
+.imcd-topbar .left img.logo-mt{
+  height:28px; width:auto; display:block; border-radius:6px;
+}
+.imcd-topbar .left .brand-name{
+  font-weight:700; color:#1b2b55; letter-spacing:.2px;
+}
+
+/* Derecha: enlaces */
+.imcd-topbar .right{ display:flex; align-items:center; gap:10px; }
+.imcd-topbar .right .nav{ display:flex; align-items:center; gap:10px; }
+.imcd-topbar .right .nav a{
+  font-weight:600; font-size:.92rem; color:#2a3e78; text-decoration:none;
+  padding:6px 10px; border-radius:8px;
+}
+.imcd-topbar .right .nav a:hover{ background:#eef3ff; }
+.imcd-topbar .right .nav a.active{ background:#e3ebff; color:#1f3a88; }
+
+/* -------------------------------
+   Sidebar / Menú IMCD (rail)
+   ------------------------------- */
+#sidebar.imcd-rail{
+  position: fixed; inset: 0 auto 0 0;
+  width: var(--imcd-sidebar-w);
+  background: linear-gradient(180deg, var(--imcd-blue-1), var(--imcd-blue-2));
+  color:#fff; display:flex; flex-direction:column;
+  box-shadow: 0 8px 30px rgba(0,0,0,.18);
+  z-index: 1040;
+}
+/* Cabecera del menú: logo IMCD */
+#sidebar.imcd-rail .brand{
+  height: var(--imcd-header-h);
+  padding: 0 16px;
+  display:flex; align-items:center; gap:12px;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+#sidebar.imcd-rail .brand img.logo-imcd{ height:28px; width:auto; display:block; }
+#sidebar.imcd-rail .brand .name{ font-weight:700; letter-spacing:.2px; white-space:nowrap; }
+
+/* Botón collapse/expand */
+#sidebar.imcd-rail .toggle{
+  margin: 10px; height: 38px;
+  display:flex; align-items:center; justify-content:center;
+  border-radius: 10px; background: rgba(255,255,255,.08);
+  color:#fff; cursor:pointer; border: 1px solid rgba(255,255,255,.18);
+}
+#sidebar.imcd-rail .toggle:hover{ background: rgba(255,255,255,.16); }
+
+/* Scroll e items (los inyecta tu backend en #menu) */
+#sidebar.imcd-rail .rail-scroll{ overflow-y:auto; padding: 12px 8px 16px; flex:1; }
+#sidebar.imcd-rail a{
+  display:flex; align-items:center; gap:12px;
+  padding:10px 12px; margin:4px 6px;
+  border-radius:12px; color:#eef3ff; text-decoration:none; font-weight:500;
+  transition: transform .12s ease, background .12s ease, color .12s ease;
+}
+#sidebar.imcd-rail a .icon{ width:22px; display:inline-flex; justify-content:center; opacity:.95; }
+#sidebar.imcd-rail a:hover{ background: rgba(255,255,255,.12); transform: translateX(2px); }
+#sidebar.imcd-rail a.active{ background:#5a8cff; color:#fff; box-shadow:0 8px 18px rgba(38,99,255,.32); }
+
+/* Collapse real del menú */
+body.sidebar-mini #sidebar.imcd-rail{ width: var(--imcd-sidebar-mini); }
+body.sidebar-mini #sidebar.imcd-rail .brand .name{ display:none; } /* oculta texto IMCD */
+body.sidebar-mini #sidebar.imcd-rail a{ justify-content:center; gap:0; }
+body.sidebar-mini #sidebar.imcd-rail a .label{ display:none; }
+
+/* -------------------------------
+   Page hero y cards
+   ------------------------------- */
+.page-hero{
+  border:1px solid var(--imcd-border);
+  border-radius: var(--imcd-radius-xl);
+  background: linear-gradient(135deg, var(--imcd-brand-100) 0%, #eef5ff 100%);
+  box-shadow: var(--imcd-shadow);
+}
+.page-hero-title{
+  font-weight: 800; letter-spacing: .2px; color: var(--imcd-brand-900);
+  font-size: 1.35rem;
+}
+.page-hero-subtitle{
+  font-size: .9rem; color: var(--imcd-muted); margin-top: .15rem;
+}
+.page-hero-badge{
+  width: 44px; height: 44px; border-radius: 12px;
+  display: grid; place-items: center;
+  background: var(--imcd-brand-200); color: var(--imcd-brand-900);
+  box-shadow: inset 0 2px 4px rgba(0,0,0,.05);
+  font-size: 1.05rem;
+}
+.page-hero-pill{
+  display: inline-block; padding: .25rem .7rem; border-radius: 999px;
+  background: var(--imcd-brand-200); color: var(--imcd-brand-900);
+  font-weight: 700; border: 1px solid #d7e6ff;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,.04);
+  font-size: .85rem; line-height: 1.1;
+}
+
+.card{
+  border:1px solid var(--imcd-border);
+  border-radius:var(--imcd-radius);
+  box-shadow:var(--imcd-shadow);
+  background:var(--imcd-surface);
+}
+.header-table{
+  font-weight:700; text-transform:uppercase;
+  color:var(--imcd-brand-900);
+  border-bottom:2px solid var(--imcd-brand-500);
+  padding-bottom:.35rem; margin-bottom:.5rem;
+  letter-spacing:.02em;
+}
+
+/* -------------------------------
+   Tablas / Bootstrap-table
+   ------------------------------- */
+.table{
+  background:var(--imcd-surface);
+  border-collapse:separate; border-spacing:0;
+}
+.table thead th{
+  background:linear-gradient(180deg,#f4f8ff 0%, #eef4ff 100%);
+  color:var(--imcd-brand-900);
+  border-bottom:2px solid var(--imcd-brand-500);
+  font-weight:700; font-size:.9rem;
+}
+.table tbody td{ vertical-align:middle; }
+.table-striped tbody tr:nth-of-type(odd){ background-color:#fafcff; }
+.table-hover tbody tr:hover{ background-color:#f2f7ff; }
+.table .badge{ font-weight:700; }
+
+/* Toolbar: buscador / columns */
+.bootstrap-table .fixed-table-toolbar .search input.form-control{
+  border-radius:999px; padding:.35rem .9rem;
+}
+.bootstrap-table .dropdown-menu{
+  border-radius:var(--imcd-radius-sm); box-shadow:var(--imcd-shadow);
+}
+
+/* Pagination */
+.page-item .page-link{
+  border-radius:999px; margin:0 2px; color:var(--imcd-brand-700);
+}
+.page-item.active .page-link{
+  background:var(--imcd-brand-500); border-color:var(--imcd-brand-500);
+}
+
+/* -------------------------------
+   Formularios
+   ------------------------------- */
+.form-control,.custom-select{
+  border:1px solid var(--imcd-border);
+  border-radius:8px; box-shadow:none;
+}
+.form-control:focus,.custom-select:focus{
+  border-color:var(--imcd-brand-500); box-shadow:var(--imcd-focus);
+}
+.form-group label{ font-weight:600; color:var(--imcd-text); }
+input[readonly], .form-control[readonly]{ background:#f6f8ff; color:#44546a; }
+
+/* Listas de checkboxes compactas (country/app/bu/role) */
+.centered-row{ display:flex; flex-direction:column; gap:4px; }
+.centered-row label{
+  display:flex; align-items:center; gap:8px;
+  padding:.25rem .5rem; border-radius:8px;
+}
+.centered-row label:hover{ background:#f6faff; }
+.centered-row input[type="checkbox"]{ width:18px; height:18px; }
+
+/* -------------------------------
+   Botones
+   ------------------------------- */
+.btn{ border-radius:10px; font-weight:600; letter-spacing:.02em; }
+.btn-primary{ background:var(--imcd-brand-500); border-color:var(--imcd-brand-500); }
+.btn-primary:hover{ background:var(--imcd-brand-600); border-color:var(--imcd-brand-600); }
+.btn-outline-primary{ color:var(--imcd-brand-700); border-color:var(--imcd-brand-500); }
+.btn-outline-primary:hover{ background:var(--imcd-brand-500); color:#fff; }
+.btn-success{ background:var(--imcd-success); border-color:var(--imcd-success); }
+.btn-warning{ background:var(--imcd-warning); border-color:var(--imcd-warning); color:#000; }
+.btn-danger{ background:var(--imcd-danger); border-color:var(--imcd-danger); }
+.btn.btn-sm.btn-outline-primary{ padding:.25rem .6rem; }
+
+/* -------------------------------
+   Alerts (en página)
+   ------------------------------- */
+.alert{
+  border-radius:10px; border:1px solid var(--imcd-border);
+  box-shadow:var(--imcd-shadow);
+}
+.alert-success{ background:#edf9f1; color:#135a34; border-color:#cdeed6; }
+.alert-warning{ background:#fff8e6; color:#6b4d00; border-color:#ffe3a4; }
+.alert-danger{ background:#ffeceb; color:#7a201a; border-color:#ffc8c3; }
+
+/* -------------------------------
+   Modales
+   ------------------------------- */
+.modal-content{
+  border-radius:14px; border:1px solid var(--imcd-border);
+  box-shadow:var(--imcd-shadow);
+}
+.modal-header{ border-bottom:1px solid var(--imcd-border); }
+.modal-footer{ border-top:1px solid var(--imcd-border); }
+
+/* -------------------------------
+   Footer (sticky helper)
+   ------------------------------- */
+#appFooter .app-footer-bar{
+  width:100%;
+  background:linear-gradient(90deg,#f6f9ff 0%, #eef6ff 100%);
+  border:1px solid var(--imcd-border);
+  border-radius:var(--imcd-radius);
+  padding:.50rem .90rem;
+  box-shadow:var(--imcd-shadow);
+}
+#appFooter .footer-title{
+  font-weight:700; color:var(--imcd-brand-900);
+  letter-spacing:.2px; font-size:.95rem; line-height:1.2;
+}
+#appFooter .footer-badge{
+  display:inline-block; font-weight:700; color:var(--imcd-brand-900);
+  background:var(--imcd-brand-200); border:1px solid #d7e6ff;
+  padding:.25rem .60rem; border-radius:999px;
+  box-shadow:inset 0 1px 2px rgba(0,0,0,.04);
+  font-size:.85rem; line-height:1.15;
+}
+.sticky-footer{ position:fixed; left:0; right:0; bottom:0; z-index:1030; background:#fff; border-top:1px solid var(--imcd-border); }
+
+/* -------------------------------
+   Utilidades
+   ------------------------------- */
+.equal-height{ height:100%; }
+.h-50vh{ height:50vh; }
+.flex-fill{ flex:1 1 auto; }
+.text-muted-700{ color:var(--imcd-muted)!important; }
+.bg-surface{ background:var(--imcd-surface)!important; }
+.bg-imcd-100{ background:var(--imcd-brand-100)!important; }
+.border-imcd{ border:1px solid var(--imcd-border)!important; }
+.rounded-10{ border-radius:10px!important; }
+.shadow-imcd{ box-shadow:var(--imcd-shadow)!important; }
+.hr-soft{ border:0; height:1px; background:linear-gradient(90deg,transparent,#e9efff,transparent); margin:12px 0; }
+
+/* -------------------------------
+   Responsive
+   ------------------------------- */
+@media (max-width: 992px){
+  #content{ padding-left:12px; padding-right:12px; }
+}
+@media (max-width: 768px){
+  #sidebar.imcd-rail{ display:none; } /* si usas offcanvas propio, quita esto */
+  body.sidebar-mini #content{ margin-left:0; }
+}
+
+
+/* ==== Submenús: colapsados por defecto ==== */
+.imcd-subtoggle{
+  display:flex; align-items:center; gap:12px;
+  padding: 10px 12px; margin:4px 6px; border-radius:12px;
+  color:#eef3ff; text-decoration:none; font-weight:500;
+  cursor:pointer; user-select:none;
+}
+.imcd-subtoggle:hover{ background: rgba(255,255,255,.12); transform: translateX(2px); }
+.imcd-subtoggle .chev{
+  margin-left:auto; transition: transform .18s ease; opacity:.9;
+}
+.imcd-submenu{
+  max-height: 0; overflow: hidden;
+  transition: max-height .2s ease;
+  margin: 0 6px; border-left: 1px solid rgba(255,255,255,.15);
+  padding-left: 6px;              /* indent visual */
+}
+.imcd-submenu.open{ max-height: 900px; }  /* suficiente para listas medianas */
+.imcd-submenu a{ margin: 2px 0 2px 8px; }
+
+/* Rotar chevron cuando abre */
+.imcd-subtoggle[aria-expanded="true"] .chev{ transform: rotate(90deg); }
+
+
+/* ==== Logo del menú: ocupa TODO el ancho, sin texto al lado ==== */
+#sidebar.imcd-rail .brand{
+  padding: 8px 8px; height: var(--imcd-header-h);
+  display:flex; align-items:center; justify-content:center;
+}
+#sidebar.imcd-rail .brand img.logo-imcd{
+  width: 100%; height: 100%;
+  object-fit: contain;        /* respeta proporciones */
+  object-position: center;
+  display:block;
+}
+/* colapsado: sigue ocupando todo el ancho disponible */
+body.sidebar-mini #sidebar.imcd-rail .brand img.logo-imcd,
+#sidebar.imcd-rail[data-collapsed="1"] .brand img.logo-imcd{
+  width: 100%; height: 100%;
+}
+
+/* Oculta cualquier texto junto al logo, si lo hubiera */
+#sidebar.imcd-rail .brand .name{ display:none !important; }
+
+/* ==== Submenús colapsados por defecto (suaves) ==== */
+.imcd-submenu{
+  max-height: 0; overflow: hidden;
+  transition: max-height .2s ease;
+  margin: 0 6px; border-left: 1px solid rgba(255,255,255,.15);
+  padding-left: 6px;
+}
+.imcd-submenu.open{ max-height: 900px; }
+.imcd-subtoggle .chev{ margin-left:auto; transition: transform .18s ease; opacity:.9; }
+.imcd-subtoggle[aria-expanded="true"] .chev{ transform: rotate(90deg); }
+
+/* ==== Items en modo colapsado: etiqueta oculta, solo icono ==== */
+#sidebar.imcd-rail a .label{ display:inline-block; white-space:nowrap; }
+body.sidebar-mini #sidebar.imcd-rail a,
+#sidebar.imcd-rail[data-collapsed="1"] a{
+  justify-content:center; gap:0;
+}
+body.sidebar-mini #sidebar.imcd-rail a .label,
+#sidebar.imcd-rail[data-collapsed="1"] a .label{
+  display:none;
+}
+
+/* ===== Sticky Footer IMCD ===== */
+:root { --imcd-footer-h: 56px; } /* ajusta si lo quieres más bajo/alto */
+
+#appFooter{
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  width: 100%;
+  z-index: 5000; /* por encima del sidebar/menu */
+  background: #ffffff;
+  border-top: 1px solid rgba(0,0,0,0.1);
+}
+
+#appFooter .app-footer-bar{
+  min-height: var(--imcd-footer-h);
+  padding: 8px 16px;
+}
+
+#appFooter .footer-title{ font-weight: 600; }
+#appFooter .footer-badge{
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(0,0,0,0.08);
+  font-size: 0.875rem;
+}
+
+/* Si usas #content con margen por el sidebar, no interfiere.
+   El padding-bottom del <body> lo gestiona el JS de abajo. */
+/* ==== Font Awesome 5 — compat (evita overrides de fuentes) ==== */
+.fas, .fa-solid { font-family: "Font Awesome 5 Free"; font-weight: 900; }
+.far           { font-family: "Font Awesome 5 Free"; font-weight: 400; }
+.fab           { font-family: "Font Awesome 5 Brands"; font-weight: 400; }
+
+/* Asegura que los <i> generados por bootstrap-fileinput no queden ocultos */
+.file-input .btn i { display: inline-block; }
+
+/* ===== Menú colapsado: Nivel 1 solo icono, Nivel 2 con texto en varias líneas ===== */
+
+/* Nivel 1: anclas de primer nivel dentro de #menu (mostramos solo el icono) */
+body.sidebar-mini #sidebar #menu > ul > li > a,
+body.sidebar-mini #sidebar #menu > li > a {
+  font-size: 0 !important;            /* oculta texto aunque no haya <span> */
+  justify-content: center;             /* centra el icono si hay layout flex/grid */
+}
+
+/* Reponemos tamaño de los iconos (FA o SVG) dentro del nivel 1 */
+body.sidebar-mini #sidebar #menu > ul > li > a i,
+body.sidebar-mini #sidebar #menu > li > a i,
+body.sidebar-mini #sidebar #menu > ul > li > a svg,
+body.sidebar-mini #sidebar #menu > li > a svg {
+  font-size: 1rem !important;
+  width: 1.25rem;                      /* opcional: cuadrar ancho fijo del icono */
+  height: 1.25rem;
+}
+
+/* Nivel 2 (y más profundo): permitir múltiples líneas en el texto */
+body.sidebar-mini #sidebar #menu ul ul a {
+  white-space: normal !important;      /* rompe en espacios */
+  word-break: break-word;              /* por si hay palabras largas */
+  line-height: 1.15;                   /* algo más compacto */
+  font-size: inherit;                  /* asegúrate de que no hereda 0 de arriba */
+}
+
+/* Si el layout del menú obliga a nowrap global, lo sobreponemos solo en colapso */
+body.sidebar-mini #sidebar #menu a { white-space: nowrap; }      /* default */
+body.sidebar-mini #sidebar #menu ul ul a { white-space: normal; }/* excepción Nivel 2 */
+
+/* Expanded: añade espacio entre icono y texto */
+body:not(.sidebar-mini) #sidebar #menu a i,
+body:not(.sidebar-mini) #sidebar #menu a svg{
+  margin-right: .5rem;   /* ajusta a .375rem / .75rem si quieres más/menos */
+  vertical-align: middle;
+}
+
+/* Compactar acciones en tabla */
+.table-actions {
+  white-space: nowrap;            /* no partir línea */
+}
+.table-actions .btn {
+  padding: .15rem .4rem;          /* más pequeño que btn-sm por defecto */
+  line-height: 1.2;
+}
+.table-actions .btn i {
+  vertical-align: -1px;
+}
+
+/* Si necesitas aún más compacto en <= lg, muestra solo iconos */
+@media (max-width: 1200px) {
+  .table-actions .btn .d-none.d-xl-inline { display: none !important; }
+}
+
+/* ==== KPI Cards =================================================== */
+.kpi-card{
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--imcd-border);
+  border-radius: var(--imcd-radius-xl);
+  box-shadow: var(--imcd-shadow);
+  background: var(--imcd-surface);
+}
+
+.kpi-badge{
+  position: absolute;
+  top: 10px; right: 10px;
+  width: 64px; height: 64px;
+  border-radius: 14px;
+  background: var(--imcd-brand-200);
+  color: var(--imcd-brand-900);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,.05);
+}
+.kpi-badge-top{
+  font-weight: 800; font-size: .95rem; line-height: 1;
+}
+.kpi-badge-bottom{
+  font-weight: 700; font-size: .75rem; opacity: .8;
+}
+
+.kpi-title{
+  font-weight: 700; color: var(--imcd-brand-900);
+  margin-bottom: .25rem;
+}
+.kpi-value{
+  font-size: 1.6rem; font-weight: 800; color: var(--imcd-brand-700);
+  margin-bottom: .25rem;
+}
+.kpi-subtle{
+  color: var(--imcd-muted);
+}
+
+/* Progress bar acorde a marca (opcional) */
+.kpi-card .progress{
+  height: 6px; border-radius: 999px; background: #eef3ff;
+}
+.kpi-card .progress-bar{
+  background: var(--imcd-brand-500);
+}
+
+
+/* ===== Subniveles en modo contraído: forzar salto en espacios y ajuste al rail ===== */
+
+/* 1) El <a> de submenú debe poder envolver (aunque sea flex) */
+body.sidebar-mini #sidebar .imcd-submenu a {
+  display: flex;           /* si ya es flex, lo mantenemos */
+  flex-wrap: wrap;         /* permite varias líneas */
+  align-items: center;
+  white-space: normal !important;    /* mata cualquier nowrap heredado */
+  overflow: visible !important;      /* evita clipping del texto */
+  text-overflow: clip !important;    /* sin puntos suspensivos */
+  max-width: 100%;
+  min-width: 0;                        /* clave para que flex deje encoger */
+  line-height: 1.15;
+}
+
+/* 2) Icono fija su anchura; no crece ni colapsa */
+body.sidebar-mini #sidebar .imcd-submenu a .icon {
+  flex: 0 0 1.25rem;
+  width: 1.25rem;
+  min-width: 1.25rem;
+  text-align: center;
+}
+
+/* 3) La etiqueta ocupa toda la fila y puede partir por espacios y, si hace falta, dentro de palabras */
+body.sidebar-mini #sidebar .imcd-submenu a .label,
+body.sidebar-mini #sidebar .imcd-submenu a .text,          /* por si usas .text en lugar de .label */
+body.sidebar-mini #sidebar .imcd-submenu a span:not(.icon) /* fallback si no hay clase específica */
+{
+  display: block;
+  flex: 1 1 100%;                  /* salta debajo del icono y usa todo el ancho */
+  min-width: 0;                    /* IMPORTANTÍSIMO para permitir wrap en flex */
+  white-space: normal !important;  /* rompe en espacios */
+  overflow-wrap: anywhere;         /* y dentro de palabras si es necesario */
+  word-break: normal;
+  hyphens: auto;
+  max-width: 100%;
+}
+
+/* 4) Si en tu CSS hay un nowrap global sobre los items del rail, lo neutralizamos solo en subniveles */
+body.sidebar-mini #sidebar.imcd-rail .imcd-submenu a,
+body.sidebar-mini #sidebar.imcd-rail .imcd-submenu a * {
+  white-space: normal !important;
+}
+
+/* 5) Compactación del rail en modo contraído (altura más corta) */
+body.sidebar-mini #sidebar.imcd-rail .rail-scroll { padding: 6px 6px 8px !important; }
+body.sidebar-mini #sidebar.imcd-rail a { padding: 5px 7px !important; margin: 2px 4px !important; border-radius: 10px; }
+body.sidebar-mini #sidebar.imcd-rail .imcd-subtoggle { padding: 5px 7px !important; margin: 2px 4px !important; }
+body.sidebar-mini #sidebar.imcd-rail .imcd-submenu a { padding: 5px 7px !important; margin: 2px 2px !important; }
+
+/* 6) Blindaje por si alguien oculta la etiqueta en colapso */
+body.sidebar-mini #sidebar .imcd-submenu a .label { display: block !important; }
+
+/* 7) Evita que un contenedor padre corte el texto de submenú */
+body.sidebar-mini #sidebar .imcd-submenu,
+body.sidebar-mini #sidebar .imcd-submenu li {
+  overflow: visible !important;
+}
+
+/* Evitar que cualquier regla o el alert oculten iconos del fileinput */
+.file-input .btn i,
+.kv-fileinput .btn i,
+.file-input .btn svg,
+.kv-fileinput .btn svg {
+  display: inline-block !important;
+  vertical-align: middle;
+}
+
+/* Ajuste de badge lateral en KPIs (más ancho, texto centrado y limpio) */
+.kpi-badge {
+  min-width: 90px;              /* antes ~65px */
+  width: 90px;                  /* ancho fijo para alineación */
+  text-align: center;
+  border-radius: 8px;
+  background-color: #f8f9fa;    /* fondo claro coherente con Bootstrap */
+  box-shadow: 0 0 4px rgba(0,0,0,0.1);
+  padding: 6px 4px;
+}
+
+.kpi-badge-top {
+  font-size: 1.1rem;            /* número total */
+  font-weight: 600;
+  color: #007bff;
+  line-height: 1.2;
+  white-space: nowrap;          /* evita salto de línea */
+}
+
+.kpi-badge-bottom {
+  font-size: 0.8rem;            /* texto denominador */
+  color: #666;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#sidebar.imcd-rail .toggle-info {
+  margin: 10px;
+  height: 38px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius: 10px;
+  background: rgba(255,255,255,.08);
+  color:#fff;
+  cursor:pointer;
+  border: 1px solid rgba(255,255,255,.18);
+}
+#sidebar.imcd-rail .toggle-info:hover {
+  background: rgba(255,255,255,.16);
+}
+
+
+/* ======================================================
+   FIX — Sidebar collapse/expand visual behavior (FINAL)
+   ====================================================== */
+
+/* Sidebar base */
+#sidebar.imcd-rail {
+  position: fixed;
+  inset: 0 auto 0 0;
+  width: var(--imcd-sidebar-w);
+  background: linear-gradient(180deg, var(--imcd-blue-1), var(--imcd-blue-2));
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 8px 30px rgba(0,0,0,.18);
+  z-index: 1040;
+  transition: width 0.3s ease;
+}
+
+/* Estado expandido */
+#sidebar.imcd-rail.expanded {
+  width: var(--imcd-sidebar-w);
+}
+
+/* Estado colapsado */
+#sidebar.imcd-rail.collapsed,
+body.sidebar-mini #sidebar.imcd-rail {
+  width: var(--imcd-sidebar-mini) !important;
+}
+
+/* Ajuste del contenido */
+#content {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: calc(var(--imcd-header-h) + 16px) 16px 16px 16px;
+  margin-left: var(--imcd-sidebar-w);
+  padding-bottom: calc(var(--footer-h) + 8px);
+  transition: margin-left 0.3s ease;
+}
+
+/* Contenido cuando el sidebar está colapsado */
+#content.with-rail,
+body.sidebar-mini #content {
+  margin-left: var(--imcd-sidebar-mini) !important;
+}
+
+/* Header fijo (ajustado al ancho dinámico del sidebar) */
+.imcd-topbar {
+  position: fixed;
+  top: 0;
+  left: var(--imcd-sidebar-w);
+  right: 0;
+  height: var(--imcd-header-h);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  background: rgba(255,255,255,.94);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(20,40,90,.08);
+  z-index: 1035;
+  transition: left 0.3s ease;
+}
+
+/* Cuando el sidebar se colapsa */
+body.sidebar-mini .imcd-topbar {
+  left: var(--imcd-sidebar-mini);
+}
+
+/* Botones del sidebar */
+#sidebar.imcd-rail .toggle,
+#sidebar.imcd-rail .toggle-info {
+  margin: 10px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: rgba(255,255,255,.08);
+  color: #fff;
+  cursor: pointer;
+  border: 1px solid rgba(255,255,255,.18);
+  transition: background .15s ease;
+}
+#sidebar.imcd-rail .toggle:hover,
+#sidebar.imcd-rail .toggle-info:hover {
+  background: rgba(255,255,255,.16);
+}
+
+/* Alineación de enlaces al colapsar */
+body.sidebar-mini #sidebar.imcd-rail a,
+#sidebar.imcd-rail.collapsed a {
+  justify-content: center;
+  gap: 0;
+}
+body.sidebar-mini #sidebar.imcd-rail a .label,
+#sidebar.imcd-rail.collapsed a .label {
+  display: none;
+}
+
+/* Scroll */
+#sidebar.imcd-rail .rail-scroll {
+  overflow-y: auto;
+  padding: 12px 8px 16px;
+  flex: 1;
+}
+
+/* Transiciones suaves del sidebar y contenido */
+#sidebar.imcd-rail,
+#content,
+.imcd-topbar {
+  transition: all 0.3s ease;
+}
+
+/* ======================================================
+   RESTORE — Compact Sidebar UX (level behaviors)
+   ====================================================== */
+
+/* 1️⃣ Ajuste de ancho del menú colapsado */
+:root {
+  --imcd-sidebar-mini: 100px; /* antes 80px */
+}
+
+/* 2️⃣ Nivel 1 — solo icono cuando el menú está contraído */
+body.sidebar-mini #sidebar #menu > ul > li > a,
+body.sidebar-mini #sidebar #menu > li > a {
+  font-size: 0 !important;          /* oculta texto */
+  justify-content: center;          /* centra el icono */
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+/* Restaura tamaño de iconos en nivel 1 */
+body.sidebar-mini #sidebar #menu > ul > li > a i,
+body.sidebar-mini #sidebar #menu > li > a i,
+body.sidebar-mini #sidebar #menu > ul > li > a svg,
+body.sidebar-mini #sidebar #menu > li > a svg {
+  font-size: 1rem !important;
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+/* 3️⃣ Nivel 2+ — permitir saltos de línea en el texto */
+body.sidebar-mini #sidebar #menu ul ul a {
+  display: flex;
+  flex-wrap: wrap;             /* permite varias líneas */
+  white-space: normal !important;
+  word-break: break-word;
+  line-height: 1.15;
+  font-size: 0.85rem;
+  justify-content: flex-start;
+  text-align: left;
+  padding-left: 0.75rem;
+}
+
+/* Si hay spans o labels dentro, aseguran multilinea */
+body.sidebar-mini #sidebar #menu ul ul a .label,
+body.sidebar-mini #sidebar #menu ul ul a .text,
+body.sidebar-mini #sidebar #menu ul ul a span:not(.icon) {
+  display: block;
+  flex: 1 1 100%;
+  min-width: 0;
+  white-space: normal !important;
+  overflow-wrap: anywhere;
+  word-break: normal;
+  line-height: 1.2;
+}
+
+/* ======================================================
+   FIX REAL — Nivel 2: cada palabra en una línea (colapsado)
+   ====================================================== */
+
+body.sidebar-mini #sidebar .imcd-submenu a {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  text-align: left;
+  padding: 5px 8px !important;
+}
+
+/* Ocultamos el texto original y recreamos con saltos de línea */
+body.sidebar-mini #sidebar .imcd-submenu a .label,
+body.sidebar-mini #sidebar .imcd-submenu a .text,
+body.sidebar-mini #sidebar .imcd-submenu a span:not(.icon) {
+  position: relative;
+  color: transparent;                /* oculta texto original */
+}
+
+body.sidebar-mini #sidebar .imcd-submenu a .label::after,
+body.sidebar-mini #sidebar .imcd-submenu a .text::after,
+body.sidebar-mini #sidebar .imcd-submenu a span:not(.icon)::after {
+  content: attr(title);              /* usa el atributo title como texto fuente */
+  white-space: pre-line;
+  color: #fff;
+  display: block;
+  line-height: 1.1;
+  font-size: 0.8rem;
+}
+
+/* =======================================
+   Delegation block (header)
+   ======================================= */
+
+.delegation-panel {
+    display:flex;
+    align-items:center;
+    margin-left: 20px;
+}
+
+.delegation-inner {
+    display:flex;
+    align-items:center;
+    gap:10px;
+    background: var(--imcd-brand-100);
+    padding:6px 12px;
+    border-radius: var(--imcd-radius);
+    border:1px solid var(--imcd-border);
+    box-shadow: var(--imcd-shadow);
+}
+
+.delegation-label {
+    font-size:.85rem;
+    font-weight:600;
+    color: var(--imcd-brand-900);
+    white-space:nowrap;
+}
+
+.delegation-user {
+    font-weight:600;
+    color: var(--imcd-brand-700);
+}
+
+.delegation-select {
+    height:32px;
+    width:160px;
+    font-size:.85rem;
+}
+
+.delegation-btn {
+    height:32px;
+    font-size:.8rem;
+    padding:0 12px !important;
+    white-space:nowrap;
+}
+
+/* Fix logo tamaño original */
+.imcd-topbar .logo-sp {
+    height: 28px !important;
+    width: auto !important;
+    max-height: 28px !important;
+    object-fit: contain;
+}
+
+/* Ocultar el espacio que dejaba la NAV */
+.imcd-topbar .right .nav {
+    display: none !important;
+}
+
+/* Sidebar colapsado: separar icono y etiqueta en nivel 1 */
+body.sidebar-mini #sidebar.imcd-rail .components > li > a.level1-link {
+  display: flex;
+  flex-direction: column;   /* icono arriba, texto debajo */
+  align-items: center;
+  gap: 4px;                 /* separación entre icono y label */
+}
+
+/* Por si en algún momento se usa la clase .collapsed en el sidebar */
+#sidebar.imcd-rail.collapsed .components > li > a.level1-link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ================================================================
+   SMART PURCHASE — Restaurar colores de campos (editable / required)
+   ================================================================ */
+
+/* Campos obligatorios (amarillo) – la lógica JS usa .obligatorio */
+input.form-control.obligatorio,
+select.form-control.obligatorio,
+textarea.form-control.obligatorio,
+.obligatorio {
+    background-color: #fff8a8 !important;   /* amarillo claro */
+}
+
+/* Opcional: obligatorio con error, si algún día añades .error */
+input.form-control.obligatorio.error,
+select.form-control.obligatorio.error,
+textarea.form-control.obligatorio.error {
+    background-color: #ffe3a4 !important;
+    border-color: #f0ad4e !important;
+}
+
+/* ============================================
+   TRAVEL FORM – SPECIFIC ENHANCEMENTS
+   ============================================ */
+
+/* Asterisco de campo obligatorio */
+.reqMark {
+    color: #d60000;
+    font-weight: bold;
+    margin-left: 4px;
+}
+
+/* Campo obligatorio no cumplido */
+.invalid-mandatory {
+    border: 2px solid #d9534f !important;
+    background: #fff5f5 !important;
+}
+
+/* Botón eliminar en accounts/principals */
+.removeAcc {
+    cursor: pointer;
+    font-size: 20px;
+    color: #b30000;
+    padding: 0 6px;
+}
+.removeAcc:hover {
+    color: #7a0000;
+}
+
+/* Estilo de items en resultados */
+#accountResults .list-group-item,
+#principalResults .list-group-item {
+    cursor: pointer;
+    color: #003366 !important;
+}
+#accountResults .list-group-item:hover,
+#principalResults .list-group-item:hover {
+    background-color: #eef5ff;
+}
+
+/* Estilo de items seleccionados */
+#accountSelected .list-group-item,
+#principalSelected .list-group-item {
+    color: #003366 !important;
+}
+
+/* Labels */
+form label {
+    color: #003366 !important;
+}
+
+/* Hero title/subtitle */
+.page-hero-title,
+.page-hero-subtitle,
+.page-hero-badge i {
+    color: #003366 !important;
+}
+
+/* ======================================================
+   FIX REAL — Movimiento del contenido según colapso
+   ====================================================== */
+
+/* Sidebar expandido → content con margen grande */
+#sidebar.imcd-rail.expanded ~ #content {
+    margin-left: var(--imcd-sidebar-w) !important;
+}
+
+/* Sidebar colapsado → content con margen pequeño */
+#sidebar.imcd-rail.collapsed ~ #content,
+body.sidebar-mini #content {
+    margin-left: var(--imcd-sidebar-mini) !important;
+}
+
+/* Ajustar también la topbar */
+#sidebar.imcd-rail.expanded ~ .imcd-topbar {
+    left: var(--imcd-sidebar-w) !important;
+}
+
+#sidebar.imcd-rail.collapsed ~ .imcd-topbar,
+body.sidebar-mini .imcd-topbar {
+    left: var(--imcd-sidebar-mini) !important;
+}
+
+/* ============================================
+   FIX Travel Tool — Mostrar labels de nivel 2
+   en modo colapsado sin afectar nivel 1
+============================================ */
+body.sidebar-mini #sidebar ul ul a .label {
+    display: block !important;
+    white-space: normal !important;
+    font-size: 11px !important;
+    line-height: 1.15 !important;
+    text-align: center !important;
+}
+
+
+.chip {
+    background: #e8f1ff;
+    border-radius: 25px;
+    padding: 4px 12px;
+    margin: 2px;
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.85rem;
+}
+
+.chip .remove {
+    margin-left: 8px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.compact-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 20px;
+    align-items: center;
+}
+
+.compact-field {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 5px;
+}
+
+.compact-field label {
+    margin: 0;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.compact-field input,
+.compact-field select {
+    width: 140px;       /* Ajustable */
+}
+
+.segment-header {
+    font-weight: 600;
+    background: #e9eef5;
+    padding: 4px 10px;
+    border-radius: 4px;
+    margin-right: 12px;
+    white-space: nowrap;
+}
+
+.segment-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 18px;
+}
+
+.compact-field {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+}
+
+.compact-field label {
+    margin: 0;
+    font-weight: 500;
+}
+
+/* ============================
+   Travel – Comment single line
+   ============================ */
+.comment-line {
+    min-height: 24px !important;
+    height: 24px !important;
+    line-height: 1.2 !important;
+    padding-top: 2px !important;
+    padding-bottom: 2px !important;
+    resize: none;
+    overflow: hidden;
+}
