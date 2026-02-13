@@ -193,11 +193,24 @@ function operateUrl(value, row, index) {
     ].join('')
 }
 function ajaxRequest(params) {
-    rolParam = (rol && rol !== 'all' ? "&rol=" + rol : '');
 
+    // 🔧 Fuente correcta del rol en la versión actual
+    let effectiveRol = localStorage.getItem('activeRol');
 
-    var status = ($("#select-status").val() != null  && $("#select-status").val() != '' ? "&status=" + $("#select-status").val()  : '');
-    var country = ($("#select-country").val() != null  && $("#select-country").val() != '' ? "&country=" + $("#select-country").val() : '');
+    // Compatibilidad defensiva por si alguien setea "rol"
+    if (typeof rol !== 'undefined' && rol && rol !== 'all') {
+        effectiveRol = rol;
+    }
+
+    let rolParam = (effectiveRol ? "&rol=" + effectiveRol : '');
+
+    var status = ($("#select-status").val() != null && $("#select-status").val() !== ''
+        ? "&status=" + $("#select-status").val()
+        : '');
+
+    var country = ($("#select-country").val() != null && $("#select-country").val() !== ''
+        ? "&country=" + $("#select-country").val()
+        : '');
 
     var delayed = '';
     var process = '';
@@ -205,15 +218,23 @@ function ajaxRequest(params) {
     var bu = '';
 
     if (userLogged.Profiles.filter(itm => itm === 'BUM' || itm === 'PRMAN' || itm === 'INMAN').length > 0) {
-        delayed = ($("#select-delayed").val() != null && $("#select-delayed").val() != ''  ? "&delayed=" + $("#select-delayed").val() : '');
-        process = ($("#select-process").val() != null && $("#select-process").val() != ''  ? "&process=" + $("#select-process").val() : '');
-        user = ($("#select-user").val() != null && $("#select-user").val() != ''  ? "&user=" + $("#select-user").val() : '');
-        bu = ($("#select-bu").val() != null && $("#select-bu").val() != ''  ? "&bu=" + $("#select-bu").val() : '');
+        delayed = ($("#select-delayed").val() != null && $("#select-delayed").val() !== ''
+            ? "&delayed=" + $("#select-delayed").val()
+            : '');
+        process = ($("#select-process").val() != null && $("#select-process").val() !== ''
+            ? "&process=" + $("#select-process").val()
+            : '');
+        user = ($("#select-user").val() != null && $("#select-user").val() !== ''
+            ? "&user=" + $("#select-user").val()
+            : '');
+        bu = ($("#select-bu").val() != null && $("#select-bu").val() !== ''
+            ? "&bu=" + $("#select-bu").val()
+            : '');
     }
 
-
     $.get({
-        url: URLBACKEND + "/utils/pending_tasks?UBT_Id=" + userLogged.UBT_Id + rolParam
+        url: URLBACKEND + "/utils/pending_tasks?UBT_Id=" + userLogged.UBT_Id
+            + rolParam
             + status
             + country
             + delayed
@@ -221,16 +242,16 @@ function ajaxRequest(params) {
             + user
             + bu
             + "&" + $.param(params.data),
-        type: 'Get'//,
-        //timeout: 1000
+        type: 'GET'
     })
-        .then(tableData => {
-            params.success(tableData)
-        })
-        .catch(e => {
-            params.error();
-        });
+    .then(tableData => {
+        params.success(tableData);
+    })
+    .catch(() => {
+        params.error();
+    });
 }
+
 
 function filtrar(evt) {
     if (evt)

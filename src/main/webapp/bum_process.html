@@ -13,14 +13,13 @@
           integrity="sha384-9gVQ4dYFwwWSjIDZnLEWnxCjeSWFphJiwGPXr1jddIhOegiu1FwO5qRGvFXOdJZ4" crossorigin="anonymous">
 
     <!-- Our Custom CSS -->
-    <link rel="stylesheet" href="styles/style4.css">
+    <link rel="stylesheet" href="styles/imcd-style.css">
+
     <!-- Font Awesome JS -->
-    <script defer src="https://use.fontawesome.com/releases/v5.0.13/js/solid.js"
-            integrity="sha384-tzzSw1/Vo+0N5UhStP3bvwWPq+uvzCMfrN1fEFe+xBmv1C/AtVX5K0uZtmcHitFZ"
-            crossorigin="anonymous"></script>
-    <script defer src="https://use.fontawesome.com/releases/v5.0.13/js/fontawesome.js"
-            integrity="sha384-6OIrr52G08NpOFSZdxxz1xdNSndlD4vdcf/q2myIUVO0VsqaGHJsB0RaBE01VTOY"
-            crossorigin="anonymous"></script>
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+
 
     <style>
         .form-control {
@@ -92,7 +91,8 @@
     </style>
 </head>
 
-<body>
+<body data-pantalla="bum_process">
+
 
 <div class="wrapper">
     <div id="section_sidebar"></div>
@@ -422,22 +422,18 @@
 <script src="https://unpkg.com/bootstrap-table@1.18.2/dist/bootstrap-table.min.js"></script>
 <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
 
-<!--jscript custom-->
 <script src="js/core.js"></script>
+<script src="js/layoutChrome.js"></script>
+
 <script>
-        $body = $("body");
-        $(document).ready(function () {
-            if (userLogged.Profiles.includes('ADMIN') || JSON.parse(localStorage.getItem(APP_NAME+"usuarioOriginal"))!=null){
-                    $("#section_header").load(APP_URL+"/components/header.html");
-            }
-            $("#section_sidebar").load(APP_URL+"/components/menu.html");
-            $("#section_footer").load(APP_URL+"/components/footer.html");
-        });
-
-
-
-
+    MosaicChrome.loadChrome({
+        appUrl: '/budgettool',
+        headerSel: '#section_header',
+        sidebarSel: '#section_sidebar',
+        footerSel: '#section_footer'
+    });
 </script>
+
 <script src="js/bum_process.js"></script>
 
 </body>

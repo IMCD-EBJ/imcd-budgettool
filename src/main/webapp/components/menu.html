@@ -1,117 +1,276 @@
-<!-- Sidebar  -->
-<nav id="sidebar" style="height:100%" class="active">
-    <div class="sidebar-header">
-        <img src="imgs/LOGO_BT.png" width="100%">
+<!-- components/menu.html -->
+<nav id="sidebar" class="imcd-rail expanded" aria-label="IMCD Sidebar">
+
+    <!-- LOGO SUPERIOR -->
+    <div class="brand-extra" aria-hidden="true">
+        <img class="logo-extra" src="imgs/logo.jpeg" alt="IMCD top logo">
     </div>
-    <ul class="list-unstyled components">
-        <!-- <li>
-            <a href="javascript:openclose()">
-                <i class="fas fa-align-left"></i>
-            </a>
-        </li>-->
-        <li>
-            <a href="javascript:logout()">
-                 <i class="fas fa-sign-out-alt"></i>
-            </a>
-        </li>
-        <li>
-            <a href="javascript:infoApp()">
-                <i class="fas fa-info"></i>
-            </a>
-        </li>
-        <!--<li>
-            <a href="javascript:loadTask()">
-                <i class="fas fa-home"></i>
-            </a>
-        </li>-->
-        <li>
-            <a href="#homeSubmenu" data-toggle="collapse" aria-expanded="true" class="dropdown-toggle">
-                <i class="fas fa-tasks"></i>&nbsp;Budget tool
-            </a>
-            <ul class="collapse show list-unstyled" id="homeSubmenu">
-                <li id="bumProcess">
-                    <a href="bum_process.html">BUM process</a>
+
+    <!-- LOGO MENÚ -->
+    <div class="brand">
+        <img class="logo-imcd" src="imgs/logo-menu.png" alt="IMCD logo principal">
+    </div>
+
+    <!-- BOTÓN COLAPSAR / EXPANDIR -->
+    <button id="btnToggleSidebar" class="toggle" type="button"
+            title="Collapse / Expand sidebar" aria-label="Collapse / Expand sidebar">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <!-- BOTÓN INFO -->
+    <button id="btnInfoApps" class="toggle-info" type="button"
+            title="Information" aria-label="Information">
+        <i class="fas fa-info"></i>
+    </button>
+
+    <!-- BOTÓN HOME -->
+    <button id="btnHomeIndex" class="toggle-info" type="button"
+            title="Home Budget Tool" aria-label="Home Budget Tool">
+        <i class="fas fa-home"></i>
+    </button>
+
+    <!-- MENÚ -->
+    <div class="rail-scroll">
+
+        <!-- ⬇️ ÚNICO CAMBIO: wrapper que el CSS espera -->
+        <div id="menu">
+
+            <ul class="list-unstyled components">
+
+                <li>
+                    <a href="#submenuBT"
+                       data-toggle="collapse"
+                       aria-expanded="true"
+                       class="dropdown-toggle level1-link">
+
+                        <span class="icon">
+                            <i class="fas fa-tasks"></i>
+                        </span>
+                        <span class="label" data-label="Budget Tool">Budget Tool</span>
+                    </a>
+
+                    <ul class="collapse show list-unstyled" id="submenuBT">
+
+                        <li id="bumProcess">
+                            <a href="bum_process.html" class="level2-link">
+                                <span class="icon"><i class="fas fa-users"></i></span>
+                                <span class="label" data-label="BUM Process">BUM Process</span>
+                            </a>
+                        </li>
+                        <li id="pmProcess">
+                            <a href="pm_process.html" class="level2-link">
+                                <span class="icon"><i class="fas fa-user-tie"></i></span>
+                                <span class="label" data-label="PM Process">PM Process</span>
+                            </a>
+                        </li>
+
+                        <li id="srProcess">
+                            <a href="sr_process.html" class="level2-link">
+                                <span class="icon"><i class="fas fa-briefcase"></i></span>
+                                <span class="label" data-label="SR Process">SR Process</span>
+                            </a>
+                        </li>
+
+                        <li id="adjProcess">
+                            <a href="adj_process.html" class="level2-link">
+                                <span class="icon"><i class="fas fa-sliders-h"></i></span>
+                                <span class="label" data-label="Adjustments Process">Adjustments Process</span>
+                            </a>
+                        </li>
+
+                    </ul>
                 </li>
-                <li id="pmProcess">
-                    <a href="pm_process.html">PM process</a>
-                </li>
-                <li id="srProcess">
-                    <a href="sr_process.html">SR process</a>
-                </li>
+
             </ul>
-            </a>
-        </li>
-    </ul>
+
+        </div>
+        <!-- ⬆️ FIN ÚNICO CAMBIO -->
+
+    </div>
 </nav>
+
+<style>
+    :root { --imcd-toplogo-h: 140px; }
+
+    #sidebar.imcd-rail .brand-extra {
+        height: var(--imcd-toplogo-h);
+        padding: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-sizing: border-box;
+    }
+
+    #sidebar.imcd-rail .brand-extra .logo-extra {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        display: block;
+    }
+</style>
+
 <script>
-    function openclose() {
-        $('#sidebar').toggleClass('active');
-        let estado = $('#sidebar').attr("class");
-        localStorage.setItem(APP_NAME+"estado_menu", estado);
-    }
-    function loadTask() {
-        rol = 'all';
-        window.location.href = 'index.html#'+rol;
+    (function () {
 
-        $('.nav-link').each(function() {
-            if ($(this).attr('href') === '#'+rol) {
-                this.className = "nav-link active";
+        function ready(fn) {
+            if (document.readyState !== "loading") fn();
+            else document.addEventListener("DOMContentLoaded", fn);
+        }
+
+        ready(function () {
+
+            const $sidebar = $("#sidebar");
+            const sidebarEl = document.getElementById("sidebar");
+
+            /* ===========================
+               NAVEGACIÓN con unsavedRedirect
+            ============================ */
+            $sidebar.on("click", "a[href]", function (e) {
+                const href = $(this).attr("href");
+                if (!href || href.startsWith("#")) return;
+
+                e.preventDefault();
+                try {
+                    if (typeof window.unsavedRedirect === "function") {
+                        window.unsavedRedirect(href, "redirect");
+                    } else {
+                        window.location.href = href;
+                    }
+                } catch (err) {
+                    window.location.href = href;
+                }
+            });
+
+            /* ===========================
+               RESTAURAR ESTADO DEL MENÚ
+            ============================ */
+            const estado = localStorage.getItem(APP_NAME + "estado_menu");
+            if (estado) {
+                sidebarEl.className = estado;
+                if (estado.includes("collapsed")) {
+                    document.body.classList.add("sidebar-mini");
+                }
             } else {
-                this.className = "nav-link";
+                sidebarEl.classList.add("expanded");
             }
+
+            /* ===========================
+               BOTÓN INFO
+            ============================ */
+            const btnInfo = document.getElementById("btnInfoApps");
+            if (btnInfo) {
+                btnInfo.addEventListener("click", function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (typeof window.infoApp === "function") window.infoApp();
+                });
+            }
+
+            /* ===========================
+               BOTÓN HOME
+            ============================ */
+            const btnHome = document.getElementById("btnHomeIndex");
+            if (btnHome) {
+                btnHome.addEventListener("click", function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    const target = "index.html";
+                    try {
+                        if (typeof window.unsavedRedirect === "function") {
+                            window.unsavedRedirect(target, "redirect");
+                        } else {
+                            window.location.href = target;
+                        }
+                    } catch (err) {
+                        window.location.href = target;
+                    }
+                });
+            }
+
+            /* ===========================
+               BOTÓN COLAPSAR / EXPANDIR
+            ============================ */
+            const btnToggle = document.getElementById("btnToggleSidebar");
+            if (btnToggle) {
+                btnToggle.addEventListener("click", function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    const collapsedNow = sidebarEl.classList.toggle("collapsed");
+
+                    if (collapsedNow) {
+                        document.body.classList.add("sidebar-mini");
+                    } else {
+                        document.body.classList.remove("sidebar-mini");
+                    }
+
+                    localStorage.setItem(APP_NAME + "estado_menu", sidebarEl.className);
+                });
+            }
+
+            /* ===========================
+               ¿ESTÁ COLAPSADO?
+            ============================ */
+            function isCollapsed() {
+                return (
+                    document.body.classList.contains("sidebar-mini") ||
+                    sidebarEl.classList.contains("collapsed")
+                );
+            }
+
+            /* ===========================
+               AJUSTE VISUAL DEL MENÚ
+            ============================ */
+            function updateMenuLayout() {
+                const collapsed = isCollapsed();
+
+                const level1Labels = sidebarEl.querySelectorAll(".components > li > a .label");
+                const level2Labels = sidebarEl.querySelectorAll(".components li ul li > a .label");
+                const level2Icons  = sidebarEl.querySelectorAll(".components li ul li > a .icon");
+
+                function wrap(labelSpan) {
+                    const original =
+                        labelSpan.dataset.originalText ||
+                        labelSpan.dataset.label ||
+                        labelSpan.textContent.trim();
+
+                    if (!labelSpan.dataset.originalText) {
+                        labelSpan.dataset.originalText = original;
+                    }
+
+                    if (collapsed) {
+                        const words = original.split(/\s+/);
+                        labelSpan.innerHTML = words.join("<br>");
+                    } else {
+                        labelSpan.innerHTML = labelSpan.dataset.originalText;
+                    }
+                }
+
+                level1Labels.forEach(wrap);
+                level2Labels.forEach(wrap);
+
+                level2Icons.forEach(icon => {
+                    icon.style.display = collapsed ? "none" : "";
+                });
+            }
+
+            /* ===========================
+               OBSERVADORES
+            ============================ */
+            const obsBody = new MutationObserver(updateMenuLayout);
+            obsBody.observe(document.body, { attributes: true, attributeFilter: ["class"] });
+
+            const obsSidebar = new MutationObserver(updateMenuLayout);
+            obsSidebar.observe(sidebarEl, { attributes: true, attributeFilter: ["class"] });
+
+            /* ===========================
+               REFRESCOS INICIALES
+            ============================ */
+            setTimeout(updateMenuLayout, 50);
+            setTimeout(updateMenuLayout, 300);
+
         });
-        $('#tableitems').bootstrapTable('refresh');
-    }
-    $(document).ready(function () {
-        var promises = [getConfigurationParam('CFG_ShowBUMProcess'), getConfigurationParam('CFG_ShowPMProcess'), getConfigurationParam('CFG_ShowSRProcess')];
-        Promise.all(promises).then(values => {
-            var CFGBUM = values[0]['CFG_ShowBUMProcess'];
-            var CFGPM = values[1]['CFG_ShowPMProcess'];
-            var CFGSR = values[2]['CFG_ShowSRProcess'];
 
-
-            var verPantallaBUM = false;
-            var verPantallaPM = false;
-            var verPantallaSR = false;
-            userLogged.Profiles.forEach(profile => {
-
-                if ((profile == 'BUM' || profile == 'ADMIN') && esBUM) {
-                    verPantallaBUM = (CFGBUM == '1');
-                    verPantallaPM = (CFGPM == '1');
-                    verPantallaSR = (CFGSR == '1');
-                }
-                if (profile == 'MM') {
-                    verPantallaPM = (CFGPM == '1');
-                    verPantallaSR = (CFGSR == '1');
-                }
-                if (profile == 'PM') {
-                    verPantallaPM = (CFGPM == '1');
-                }
-                if (profile == 'SR') {
-                    verPantallaSR = (CFGSR == '1');
-                }
-            });
-
-            if (!verPantallaBUM) {
-                $('#bumProcess').hide();
-            }
-            if (!verPantallaPM) {
-                $('#pmProcess').hide();
-            }
-            if (!verPantallaSR) {
-                $('#srProcess').hide();
-            }
-
-            $("a").click(async function () {
-                unsavedRedirect($(this).attr('href'), 'redirect');
-
-            });
-
-            if (localStorage.getItem(APP_NAME + "estado_menu") != null) {
-                let estado = localStorage.getItem(APP_NAME + "estado_menu");
-                $('#sidebar').attr("class", estado);
-            } else
-                $('#sidebar').addClass('active')
-        })
-    });
+    })();
 </script>

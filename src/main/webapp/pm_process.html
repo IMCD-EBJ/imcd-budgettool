@@ -7,130 +7,79 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
 
     <title>IMCD Budget Tool</title>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
-          integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
-    <!-- Bootstrap CSS CDN -->
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css"
+
+    <!-- Bootstrap CSS (unificado, como Travel) -->
+    <link rel="stylesheet"
+          href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css"
           integrity="sha384-9gVQ4dYFwwWSjIDZnLEWnxCjeSWFphJiwGPXr1jddIhOegiu1FwO5qRGvFXOdJZ4"
           crossorigin="anonymous">
-    <!-- Favicon clásico -->
+
+    <!-- Favicons -->
     <link rel="icon" href="/budgettool/favicon.ico" sizes="any">
-    <!-- Favicon vector -->
     <link rel="icon" type="image/svg+xml" href="/budgettool/favicon.svg">
-    <!-- iOS / iPadOS -->
     <link rel="apple-touch-icon" href="/budgettool/apple-touch-icon.png">
-    <!-- Manifest (opcional) -->
     <link rel="manifest" href="/budgettool/site.webmanifest">
-    <!-- Our Custom CSS -->
-    <link rel="stylesheet" href="styles/style4.css">
-    <!-- Font Awesome JS -->
-    <script defer src="https://use.fontawesome.com/releases/v5.0.13/js/solid.js"
-            integrity="sha384-tzzSw1/Vo+0N5UhStP3bvwWPq+uvzCMfrN1fEFe+xBmv1C/AtVX5K0uZtmcHitFZ"
-            crossorigin="anonymous"></script>
-    <script defer src="https://use.fontawesome.com/releases/v5.0.13/js/fontawesome.js"
-            integrity="sha384-6OIrr52G08NpOFSZdxxz1xdNSndlD4vdcf/q2myIUVO0VsqaGHJsB0RaBE01VTOY"
-            crossorigin="anonymous"></script>
 
+    <!-- IMCD CORPORATE STYLE -->
+    <link rel="stylesheet" href="styles/imcd-style.css">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+
+
+    <!-- =====================
+         INLINE FUNCIONAL (mínimo)
+         ===================== -->
     <style>
-        .form-control {
-            font-size: 11px;
-        }
+        /* tamaños usados por tablas y JS */
+        .form-control { font-size: 11px; }
+        small { font-size: 14px; }
 
+        /* textarea usado por JS */
         .textareaCustom {
-                display: block;
-                width: 100%;
-                padding: 0.375rem 0.75rem;
-                font-size: 11px;
-                line-height: 1.5;
-                color: #495057;
-                background-color: #fff;
-                background-clip: padding-box;
-                border: 1px solid #ced4da;
-                border-radius: 0.25rem;
-                transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+            display: block;
+            width: 100%;
+            padding: 0.375rem 0.75rem;
+            font-size: 11px;
+            line-height: 1.5;
+            color: #495057;
+            background-color: #fff;
+            border: 1px solid #ced4da;
+            border-radius: 0.25rem;
         }
 
-        small {
-            font-size: 14px;
-        }
-
+        /* estados funcionales */
         .editable {
-            background-color : #28a745;
+            background-color: #28a745;
             color: black;
             font-weight: bold;
         }
-
-        .errorValue {
-            background-color : #c82333;
-            color: black;
-            font-weight: bold;
-        }
-
         .editable:focus {
             background-color: #4bdc76;
+        }
+        .errorValue {
+            background-color: #c82333;
             color: black;
             font-weight: bold;
         }
 
-        .header-table{
-            background: #515459;
-            color: white;
-            border: solid #515459;
-            border-radius: 0.25em;
-        }
-
-        .emptyTh{
-            border : none!important;
-        }
-
-        .headerHorizontal{
-            background: white!important;
-            border : none!important;
-            font-family: sans-serif;
-            min-width: 8.5em;
-        }
-
-        .table tbody+tbody{
-            border: none!important;
-        }
-
-
-        .btn-link {
-            font-weight: 400;
-            color: white;
-            background-color: transparent;
-        }
-
-        .actualStatusElement{
-            border: solid #515459;
-            border-radius: 0.25em;
-            padding-left: 1.25em;
-            margin-top:0.1em;
-            font-size: 15px;
-        }
-
-        .scrollable{
+        /* comportamiento */
+        .scrollable {
             max-height: 7.8em;
             overflow-y: auto;
             overflow-x: hidden;
         }
 
-
-        #tableitems tr{
+        #tableitems tr {
             height: 35.5px;
-        }
-
-        caption{
-            padding-top: 0.75rem;
-            padding-bottom: 0.75rem;
-            color: #6c757d;
-            text-align: left;
-            caption-side: top;
         }
     </style>
 </head>
 
-<body>
+<body data-pantalla="pm_process">
+
 
 <div class="wrapper">
     <div id="section_sidebar"></div>
@@ -549,22 +498,34 @@
 
 <!--   Core JS Files   -->
 <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+
 <script src="./js/core/jquery.3.2.1.min.js" type="text/javascript"></script>
 <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.6.0/umd/popper.min.js"
         integrity="sha512-BmM0/BQlqh02wuK5Gz9yrbe7VyIVwOzD1o40yi1IsTjriX/NGF37NyXHfmFzIlMmoSIBXgqDiG1VNU6kB5dBbA=="
         crossorigin="anonymous"></script>
-<!--TABLA BOOTSTRAP-->
+
+<!-- Bootstrap Table -->
 <link href="https://unpkg.com/bootstrap-table@1.18.2/dist/bootstrap-table.min.css" rel="stylesheet">
 <script src="https://unpkg.com/bootstrap-table@1.18.2/dist/bootstrap-table.min.js"></script>
-<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
 
-<!--jscript custom-->
+<!-- Core app -->
 <script src="js/core.js"></script>
 
-<script src="js/pm_process.js"></script>
+<!-- Layout IMCD -->
+<script src="js/layoutChrome.js"></script>
+<script>
+    MosaicChrome.loadChrome({
+        appUrl: '/budgettool',
+        headerSel: '#section_header',
+        sidebarSel: '#section_sidebar',
+        footerSel: '#section_footer'
+    });
+</script>
+
+<!-- JS de negocio (ORDEN CORRECTO) -->
 <script src="js/pm_process_products_lost.js"></script>
+<script src="js/pm_process.js"></script>
 
 </body>
-
 </html>

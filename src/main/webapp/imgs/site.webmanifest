@@ -1,0 +1,37 @@
+{
+  "name": "IMCD Travel Manager",
+  "short_name": "TravelTool",
+  "icons": [
+    {
+      "src": "apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "favicon-32x32.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "favicon.ico",
+      "sizes": "32x32 48x48 64x64 128x128",
+      "type": "image/x-icon"
+    }
+  ],
+  "theme_color": "#0052cc",
+  "background_color": "#ffffff",
+  "display": "standalone"
+}

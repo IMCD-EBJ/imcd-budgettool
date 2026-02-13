@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IMCD Budget Tool</title>
+
+    <link rel="stylesheet"
+          href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css">
+
+    <link rel="stylesheet" href="styles/imcd-style.css">
+
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+
+<body data-pantalla="adj_process">
+
+<div class="wrapper">
+    <div id="section_sidebar"></div>
+
+    <div id="content">
+        <div id="section_header"></div>
+
+        <div class="page-hero">
+            <div class="page-hero-left">
+                <div class="page-hero-badge">
+                    <i class="fas fa-sliders-h"></i>
+                </div>
+                <div>
+                    <div class="page-hero-title">Adjustments Process</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="container-fluid">
+
+            <!-- ================= FILTER AREA ================= -->
+            <div class="card card-body mt-2">
+                <h5 class="header-table">Filter Area</h5>
+
+                <div class="row">
+                    <div class="col-md-2">
+                        <label>Country</label>
+
+                        <div class="dropdown w-100">
+                            <button class="form-control dropdown-toggle text-left"
+                                    type="button"
+                                    id="countryDropdown"
+                                    data-toggle="dropdown"
+                                    aria-haspopup="true"
+                                    aria-expanded="false">
+                                Select Countries
+                            </button>
+
+                            <div class="dropdown-menu w-100 p-3">
+
+                                <div class="form-check">
+                                    <input class="form-check-input country-check"
+                                           type="checkbox"
+                                           value="41100 - ES"
+                                           id="countryES">
+                                    <label class="form-check-label" for="countryES">Spain</label>
+                                </div>
+
+                                <div class="form-check">
+                                    <input class="form-check-input country-check"
+                                           type="checkbox"
+                                           value="42100 - PT"
+                                           id="countryPT">
+                                    <label class="form-check-label" for="countryPT">Portugal</label>
+                                </div>
+
+                                <div class="form-check">
+                                    <input class="form-check-input country-check"
+                                           type="checkbox"
+                                           value="43100 - MA"
+                                           id="countryMA">
+                                    <label class="form-check-label" for="countryMA">Morocco</label>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-2">
+                        <label>Principal</label>
+                        <select id="filterPrincipal" class="form-control"></select>
+                    </div>
+                    <div class="col-md-2">
+                        <label>ILOB</label>
+                        <select id="filterIlob" class="form-control"></select>
+                    </div>
+                    <div class="col-md-2">
+                        <label>Sales Manager</label>
+                        <select id="filterSalesManager" class="form-control"></select>
+                    </div>
+                    <div class="col-md-2">
+                        <label>Product Manager</label>
+                        <select id="filterProductManager" class="form-control"></select>
+                    </div>
+                </div>
+
+                <div class="row mt-2">
+                    <div class="col-md-2">
+                        <label>Income Type</label>
+                        <select id="filterIncomeType" class="form-control"></select>
+                    </div>
+                    <div class="col-md-2">
+                        <label>Business Type</label>
+                        <select id="filterBusinessType" class="form-control"></select>
+                    </div>
+                    <div class="col-md-2">
+                        <label>Address Name</label>
+                        <select id="filterAddressName" class="form-control"></select>
+                    </div>
+                    <div class="col-md-2">
+                        <label>Item Name</label>
+                        <select id="filterItemName" class="form-control"></select>
+                    </div>
+                    <div class="col-md-1">
+                        <label>BU</label>
+                        <select id="filterBU" class="form-control"></select>
+                    </div>
+                    <div class="col-md-1">
+                        <label>BCC</label>
+                        <select id="filterBCC" class="form-control"></select>
+                    </div>
+                    <div class="col-md-2">
+                        <label>&nbsp;</label>
+                        <button id="btnFilter" class="btn btn-primary btn-block">
+                            FILTER
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- ================= TOTAL AREA ================= -->
+            <div class="card card-body mt-2">
+                <h5 class="header-table">Total Area</h5>
+
+                <div class="row">
+
+                    <!-- IZQUIERDA: TOTALES -->
+                    <div class="col-md-6">
+
+                        <div class="row">
+
+                            <!-- ROY -->
+                            <div class="col-md-4">
+                                <table class="table table-bordered text-center">
+                                    <thead>
+                                    <tr><th colspan="2">Roy</th></tr>
+                                    </thead>
+                                    <tbody>
+                                    <tr>
+                                        <td>Qty Roy</td>
+                                        <td><input id="QtyRoy" class="form-control text-center" readonly></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Inv Roy</td>
+                                        <td><input id="InvRoy" class="form-control text-center" readonly></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Gm Roy</td>
+                                        <td><input id="GmRoy" class="form-control text-center" readonly></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Gm% Roy</td>
+                                        <td><input id="GmPercRoy" class="form-control text-center" readonly></td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- FCS -->
+                            <div class="col-md-4">
+                                <table class="table table-bordered text-center">
+                                    <thead>
+                                    <tr><th colspan="2">Fcs</th></tr>
+                                    </thead>
+                                    <tbody>
+                                    <tr>
+                                        <td>Qty Fcs</td>
+                                        <td><input id="QtyFcs" class="form-control text-center" readonly></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Inv Fcs</td>
+                                        <td><input id="InvFcs" class="form-control text-center" readonly></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Gm Fcs</td>
+                                        <td><input id="GmFcs" class="form-control text-center" readonly></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Gm% Fcs</td>
+                                        <td><input id="GmPercFcs" class="form-control text-center" readonly></td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- BDG -->
+                            <div class="col-md-4">
+                                <table class="table table-bordered text-center">
+                                    <thead>
+                                    <tr><th colspan="2">Bdg</th></tr>
+                                    </thead>
+                                    <tbody>
+                                    <tr>
+                                        <td>Qty Bdg</td>
+                                        <td><input id="QtyBdg" class="form-control text-center" readonly></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Inv Bdg</td>
+                                        <td><input id="InvBdg" class="form-control text-center" readonly></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Gm Bdg</td>
+                                        <td><input id="GmBdg" class="form-control text-center" readonly></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Gm% Bdg</td>
+                                        <td><input id="GmPercBdg" class="form-control text-center" readonly></td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- DERECHA: BOTONERAS -->
+                    <div class="col-md-6">
+
+                        <div class="row">
+
+                            <!-- ROY BUTTONS -->
+                            <div class="col-md-4">
+                                <h6>Roy</h6>
+                                <button class="btn btn-secondary btn-block">Modif. Inv + GM</button>
+                                <button class="btn btn-secondary btn-block">Modif. Inv + GM%</button>
+                                <button class="btn btn-secondary btn-block">Modif. GM + GM% (precio)</button>
+                                <button class="btn btn-secondary btn-block">Modif. GM + GM% (Qty)</button>
+                                <button class="btn btn-secondary btn-block">Modif. GM + GM% (coste)</button>
+                            </div>
+
+                            <!-- BUDGET BUTTONS -->
+                            <div class="col-md-4">
+                                <h6>Budget</h6>
+                                <button class="btn btn-secondary btn-block">Modif. Inv + GM</button>
+                                <button class="btn btn-secondary btn-block">Modif. Inv + GM%</button>
+                                <button class="btn btn-secondary btn-block">Modif. GM + GM% (precio)</button>
+                                <button class="btn btn-secondary btn-block">Modif. GM + GM% (Qty)</button>
+                                <button class="btn btn-secondary btn-block">Modif. GM + GM% (coste)</button>
+                            </div>
+
+                            <!-- SAVE -->
+                            <div class="col-md-4">
+                                <button class="btn btn-success btn-block mt-4">Save</button>
+                                <button class="btn btn-danger btn-block mt-3">Discard changes</button>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+
+
+
+            <!-- ================= DETAILS ================= -->
+            <div class="card card-body mt-2">
+                <h5 class="header-table">Details</h5>
+
+                <div class="table-responsive">
+                    <table id="adjTable" class="table table-bordered table-striped">
+                        <thead>
+                        <tr>
+                            <th>Business type/Principal</th>
+                            <th>Price Roy</th>
+                            <th>Price BDG</th>
+                            <th>QTY roy</th>
+                            <th>QTY fcs</th>
+                            <th>QTY bdg</th>
+                            <th>INV roy</th>
+                            <th>INV fcs</th>
+                            <th>INV bdg</th>
+                            <th>GM roy</th>
+                            <th>GM fcs</th>
+                            <th>GM bdg</th>
+                            <th>GM% roy</th>
+                            <th>GM% fcs</th>
+                            <th>GM% bdg</th>
+                        </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+            <!-- 🔽 PAGINACIÓN AÑADIDA (única modificación) -->
+            <div class="row mt-3">
+                <div class="col-md-3">
+                    <select id="pageSizeSelect" class="form-control">
+                        <option value="25">25</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                        <option value="250">250</option>
+                        <option value="500">500</option>
+                    </select>
+                </div>
+                <div class="col-md-6 text-center">
+                    <button id="btnPrev" class="btn btn-secondary">Previous</button>
+                    <span id="pageInfo" class="ml-3 mr-3"></span>
+                    <button id="btnNext" class="btn btn-secondary">Next</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<div id="section_footer"></div>
+
+<script src="./js/core/jquery.3.2.1.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.0/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/js/bootstrap.min.js"></script>
+<script src="js/core.js"></script>
+<script src="js/layoutChrome.js"></script>
+
+<script>
+    MosaicChrome.loadChrome({
+        appUrl: '/budgettool',
+        headerSel: '#section_header',
+        sidebarSel: '#section_sidebar',
+        footerSel: '#section_footer'
+    });
+</script>
+
+<script src="js/adj_process.js"></script>
+
+</body>
+</html>

@@ -10,12 +10,7 @@ var principalDataOriginalModificada;
 
 $(document).ready(function () {
     $body = $("body");
-    if (userLogged.Profiles.includes('ADMIN') || JSON.parse(localStorage.getItem(APP_NAME+"usuarioOriginal"))!=null){
-        $("#section_header").load(APP_URL+"/components/header.html");
-    }
-    $("#section_sidebar").load(APP_URL+"/components/menu.html");
-    $("#section_footer").load(APP_URL+"/components/footer.html");
-
+    initUserRolesSafe();
 
     var UbT_LocalADUuser = userLogged.UbT_LocalADUuser;
     loadDropDown($("#select-company"), "utils/listCompanyByUser?UbT_LocalADUuser=" + UbT_LocalADUuser, "id", "name")
@@ -923,4 +918,28 @@ function downloadExcelPm() {
 
     window.open(URLBACKEND + "/report/downloadExcel?REPORT_NAME="+reportName+"&LocalADUser=" + userLogged.UbT_LocalADUuser + "&BUAGRUPADA=" + userLogged.bu_agrupada,
         "_blank");
+}
+
+function initUserRolesSafe() {
+    // Si no existen, se consideran false
+    if (typeof esPM === 'undefined') {
+        window.esPM = false;
+    }
+    if (typeof esBUM === 'undefined') {
+        window.esBUM = false;
+    }
+    if (typeof esMM === 'undefined') {
+        window.esMM = false;
+    }
+
+    // Si existe activeRol en localStorage, se usa como fuente
+    var activeRol = localStorage.getItem('activeRol');
+
+    if (activeRol === 'PM') {
+        window.esPM = true;
+    } else if (activeRol === 'BUM') {
+        window.esBUM = true;
+    } else if (activeRol === 'MM') {
+        window.esMM = true;
+    }
 }

@@ -1,92 +1,127 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
-    <meta charset="utf-8">
+    <meta charset="UTF-8">
+    <title>IMCD Budget Tool</title>
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
 
-    <title>IMCD Budget Tool</title>
-    <!-- Favicon clásico -->
-    <link rel="icon" href="/budgettool/favicon.ico" sizes="any">
-    <!-- Favicon vector -->
-    <link rel="icon" type="image/svg+xml" href="/budgettool/favicon.svg">
-    <!-- iOS / iPadOS -->
-    <link rel="apple-touch-icon" href="/budgettool/apple-touch-icon.png">
-    <!-- Manifest (opcional) -->
-    <link rel="manifest" href="/budgettool/site.webmanifest">
-    <!-- Bootstrap CSS CDN -->
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css"
-          integrity="sha384-9gVQ4dYFwwWSjIDZnLEWnxCjeSWFphJiwGPXr1jddIhOegiu1FwO5qRGvFXOdJZ4" crossorigin="anonymous">
+    <!-- =========================
+         CSS BASE (ORDEN IMPORTANTE)
+         ========================= -->
 
-    <!-- Our Custom CSS -->
-    <link rel="stylesheet" href="styles/style4.css">
-    <!-- Font Awesome JS -->
-    <script defer src="https://use.fontawesome.com/releases/v5.0.13/js/solid.js"
-            integrity="sha384-tzzSw1/Vo+0N5UhStP3bvwWPq+uvzCMfrN1fEFe+xBmv1C/AtVX5K0uZtmcHitFZ"
-            crossorigin="anonymous"></script>
-    <script defer src="https://use.fontawesome.com/releases/v5.0.13/js/fontawesome.js"
-            integrity="sha384-6OIrr52G08NpOFSZdxxz1xdNSndlD4vdcf/q2myIUVO0VsqaGHJsB0RaBE01VTOY"
-            crossorigin="anonymous"></script>
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css">
 
-    <style>
-        .form-control {
-            font-size: 11px;
-        }
+    <!-- IMCD CORPORATE (SIEMPRE DESPUÉS DE BOOTSTRAP) -->
+    <link rel="stylesheet" href="styles/imcd-style.css">
 
-        small {
-            font-size: 11px;
-        }
-    </style>
+    <!-- Font Awesome -->
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+
 </head>
 
-<body>
+<body data-pantalla="index">
 
+
+<!-- ======================================================
+     LAYOUT WRAPPER (OBLIGATORIO)
+     ====================================================== -->
 <div class="wrapper">
+
+    <!-- SIDEBAR (LayoutChrome inyecta aquí) -->
     <div id="section_sidebar"></div>
 
-
+    <!-- CONTENIDO -->
     <div id="content">
-        <div id="section_header"></div>
-        <div id="cardHeader">
 
-        </div>
-        <br>
-        <div class="container-fluid">
-            <div class="card card-body col-md-12 text-center">
-                <h4>You don't have tasks in the budget process at this moment.</h4>
+        <!-- HEADER (LayoutChrome inyecta aquí) -->
+        <div id="section_header"></div>
+
+        <!-- ==================================================
+             CONTENIDO DE LA PÁGINA
+             ================================================== -->
+
+        <!-- HERO -->
+        <div class="page-hero d-flex align-items-center justify-content-between mb-4 p-3">
+            <div class="d-flex align-items-center gap-3">
+                <div class="page-hero-badge">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div>
+                    <div class="page-hero-title">Budget Tool</div>
+                    <div class="page-hero-subtitle">
+                        Corporate budgeting & margin overview
+                    </div>
+                </div>
             </div>
+        </div>
+
+        <!-- PAGE BODY -->
+        <div class="container-fluid px-0">
+
+            <!-- EJEMPLO CARD -->
+            <div class="card">
+                <div class="card-body text-center">
+                    <h5 class="mb-0">
+                        You don't have tasks in the budget process at this moment.
+                    </h5>
+                </div>
+            </div>
+
         </div>
     </div>
 </div>
 
+<!-- FOOTER (LayoutChrome inyecta aquí) -->
 <div id="section_footer"></div>
 
-<!--   Core JS Files   -->
-<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
-<script src="./js/core/jquery.3.2.1.min.js" type="text/javascript"></script>
+<!-- =========================
+     JS BASE (ORDEN IMPORTANTE)
+     ========================= -->
+
+<!-- jQuery -->
+<script src="js/core/jquery.3.2.1.min.js"></script>
 <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+
+<!-- Bootstrap deps -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.6.0/umd/popper.min.js"
-        integrity="sha512-BmM0/BQlqh02wuK5Gz9yrbe7VyIVwOzD1o40yi1IsTjriX/NGF37NyXHfmFzIlMmoSIBXgqDiG1VNU6kB5dBbA=="
         crossorigin="anonymous"></script>
-<!--TABLA BOOTSTRAP-->
+
+<!-- Bootstrap Table (si se usa) -->
 <link href="https://unpkg.com/bootstrap-table@1.18.2/dist/bootstrap-table.min.css" rel="stylesheet">
 <script src="https://unpkg.com/bootstrap-table@1.18.2/dist/bootstrap-table.min.js"></script>
+
+<!-- SweetAlert -->
 <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
 
-<!--jscript custom-->
-<script src="js/core.js"></script>
-<script>
-        $body = $("body");
-        $(document).ready(function () {
-            $("#section_sidebar").load(APP_URL+"/components/menu.html");
-            $("#section_footer").load(APP_URL+"/components/footer.html");
+<!-- =========================
+     CORE + LAYOUT
+     ========================= -->
 
-            if (userLogged.Profiles.includes('ADMIN') || JSON.parse(localStorage.getItem(APP_NAME+"usuarioOriginal"))!=null)
-                $("#section_header").load(APP_URL+"/components/header.html");
-        });
+<!-- Core app logic -->
+<script src="js/core.js"></script>
+
+<!-- LayoutChrome -->
+<script src="js/layoutChrome.js"></script>
+
+<script>
+    // Layout estándar IMCD
+    MosaicChrome.loadChrome({
+        appUrl: '/budgettool',
+        headerSel:  '#section_header',
+        sidebarSel: '#section_sidebar',
+        footerSel:  '#section_footer',
+        onReady: function () {
+            console.log('✅ IMCD Layout listo (BudgetTool)');
+            // JS específico de la página, si hace falta, va aquí
+        }
+    });
 </script>
 
 </body>
-
 </html>

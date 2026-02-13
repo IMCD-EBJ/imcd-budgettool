@@ -1,67 +1,154 @@
-<div id="divHeader">
-    <div class="card card-body flex-row justify-content-end">
-        <div class="mt-1">
-            <label for="select-delegation">Current User:</label>
-        </div>
-        <div class="mr-2 ml-1 mt-1" id="currentUser">
+<!-- header.html -->
+<header class="imcd-topbar">
 
-        </div>
-        <div class="mr-2 mt-1" id="divLabelDelegation">
-            <label id="labelDelegation" for="select-delegation">| Delegated User</label>
-        </div>
-        <div>
-            <select id="select-delegation" name="delegationUser" class="form-control required">
-            </select>
-        </div>
-        <div class="ml-1">
-            <button class="btn btn-primary " id="buttonChangeDelegation" onclick="changeDelegatedUser(event)">
-                Submit
-            </button>
-            <button class="btn btn-info" id="rollBackOriginal" onclick="changeOriginalUser(event)">
-                Change to original User
-            </button>
-        </div>
+    <div class="left">
+        <img class="logo-sp" src="imgs/LOGO_BT.png" alt="IMCD Budget Tool">
+        <span class="brand-name">Budget Tool</span>
     </div>
 
+    <div class="right">
 
-    <div class="card card-body flex-row justify-content-end" id="rolesCardDiv" style="display:none;">
-        <div class="mt-1" id="roles">
-            Active rol:
+        <!-- BLOQUE DE DELEGACIÓN -->
+        <div id="divHeader" class="delegation-panel" style="display:flex; align-items:center;">
+            <div class="delegation-inner" style="display:flex; gap:10px; align-items:center;">
+
+                <label class="delegation-label">Current:</label>
+                <span id="currentUser" class="delegation-user"></span>
+
+                <label id="divLabelDelegation"
+                       class="delegation-label"
+                       for="select-delegation">| Delegate:</label>
+
+                <select id="select-delegation"
+                        name="delegationUser"
+                        class="form-control delegation-select"
+                        style="width:180px;">
+                </select>
+
+                <button class="btn btn-primary delegation-btn"
+                        id="buttonChangeDelegation"
+                        onclick="changeDelegatedUser()">
+                    Submit
+                </button>
+
+                <button class="btn btn-outline-primary delegation-btn"
+                        id="rollBackOriginal"
+                        onclick="changeOriginalUser()">
+                    Back to original
+                </button>
+
+            </div>
         </div>
-        <div class="ml-1">
-            <button class="btn btn-primary " id="buttonChangeRol" onclick="changeActiveRol(true)">
-                Change rol
-            </button>
-        </div>
+
     </div>
-</div>
+</header>
+
 <script>
-    $(document).ready(function () {
-    if (localStorage.getItem(APP_NAME + "usuario") != null) {
+    /* ===========================
+       INIT HEADER DELEGATION
+       Compatible con LayoutChrome
+       =========================== */
 
+    function initDelegationHeader() {
 
         var usuarioOriginal = JSON.parse(localStorage.getItem(APP_NAME + "usuarioOriginal"));
-        var UbT_LocalADUuser = userLogged.UbT_LocalADUuser;
-        var UBT_UserName = userLogged.UBT_UserName;
-        var bu_agrupada = userLogged.bu_agrupada;
-        if (usuarioOriginal.UbT_LocalADUuser == UbT_LocalADUuser) {
-            $('#rollBackOriginal').hide();
-        } else {
+        var usuarioActivo   = JSON.parse(localStorage.getItem(APP_NAME + "usuario"));
+
+        if (!usuarioActivo) return;
+
+        $('#currentUser').text(
+            usuarioActivo.UBT_UserName || usuarioActivo.UbT_LocalADUuser
+        );
+
+
+        if (usuarioOriginal &&
+            usuarioOriginal.UbT_LocalADUuser !== usuarioActivo.UbT_LocalADUuser) {
+
             $('#select-delegation').hide();
             $('#divLabelDelegation').hide();
             $('#buttonChangeDelegation').hide();
+            $('#rollBackOriginal').show();
+
+        } else {
+            $('#rollBackOriginal').hide();
         }
-        var pantalla = window.location.pathname.split('/')[2].split('.')[0];
-        loadDropDown($("#select-delegation"), "delegation/usersList?userActive=" + UbT_LocalADUuser + '&pantalla=' + pantalla + "&BU_AGRUPADA=" + bu_agrupada, "localAdUser", "localAdUser")
 
-        $('#currentUser').empty();
-        $('#currentUser').append(capitalizeFirstLetterString(UBT_UserName));
-        gestionRoles();
+        var select = $('#select-delegation');
+        if (!select.length) return;
 
-        Array.from(document.querySelectorAll('#divHeader button')).forEach(button => {
-            button.style.width = '14em';
-        })
+        loadDropDown(
+            select,
+            "delegation/usersList?userActive=" + usuarioActivo.UbT_LocalADUuser
+                + "&pantalla=" + (typeof pantalla !== 'undefined' ? pantalla : '')
+                + "&BU_AGRUPADA=" + (usuarioActivo.bu_agrupada || ''),
+            "localAdUser",
+            "localAdUser"
+        );
     }
-    });
 
+    /* ===========================
+       EJECUCIÓN CORRECTA
+       (header inyectado dinámicamente)
+       =========================== */
+    setTimeout(initDelegationHeader, 0);
+
+    /* ===========================
+       DELEGAR USUARIO
+       =========================== */
+    function changeDelegatedUser() {
+        var usuario = $('#select-delegation').val();
+
+        $.post({ url: URLBACKEND + "delegation/changeUser?username=" + usuario })
+            .then(function (data) {
+
+                let userJson = {};
+                userJson.Profiles = [];
+
+                userJson.CFG_SendEmail = data[0].CFG_SendEmail;
+                userJson.UBT_Id = data[0].UBT_Id;
+                userJson.UBT_Mail = data[0].UBT_Mail;
+                userJson.UbT_LocalADUuser = data[0].UbT_LocalADUuser;
+                userJson.UBT_UserName = data[0].UBT_UserName;
+                userJson.bu_agrupada = data[0].bu_agrupada;
+
+                data.map(itm => {
+                    userJson.Profiles.push(itm.UBT_TipoUserId);
+                });
+
+                localStorage.setItem(APP_NAME + "usuario", JSON.stringify(userJson));
+
+                var userOriginal = JSON.parse(
+                    localStorage.getItem(APP_NAME + "usuarioOriginal")
+                );
+
+                insertLogActivity(
+                    userOriginal.UbT_LocalADUuser,
+                    'DELEGATION TO USER:' + userJson.UbT_LocalADUuser,
+                    'DONE'
+                );
+
+                localStorage.removeItem('activeRol');
+                location.reload();
+
+            })
+            .catch(function (e) {
+                if (e.status === 401) {
+                    getAlertMessage("INCORRECT_LOGIN_WAR");
+                } else {
+                    alert("Ocurrio un error al consultar contra la api");
+                }
+            });
+    }
+
+    /* ===========================
+       VOLVER A USUARIO ORIGINAL
+       =========================== */
+    function changeOriginalUser() {
+        var original = localStorage.getItem(APP_NAME + "usuarioOriginal");
+        if (original) {
+            localStorage.setItem(APP_NAME + "usuario", original);
+            localStorage.removeItem('activeRol');
+            location.reload();
+        }
+    }
 </script>

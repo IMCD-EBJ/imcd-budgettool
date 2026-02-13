@@ -29,7 +29,9 @@ public class DelegationService {
         mapaDelegationProcedures.put("bum_process", "dbo.BUM_UsersDelegation_List_Consult (?)");
         mapaDelegationProcedures.put("pm_process", "dbo.All_UsersDelegation_List_Consult (?,?)");
         mapaDelegationProcedures.put("sr_process", "dbo.All_UsersDelegation_List_Consult (?,?)");
+        mapaDelegationProcedures.put("adj_process", "dbo.All_UsersDelegation_List_Consult (?,?)");  // ← AÑADIR ESTA
     }
+
 
 
     public JSONArray getDelegationUsers(@RequestParam(value = "userActive") String user,
