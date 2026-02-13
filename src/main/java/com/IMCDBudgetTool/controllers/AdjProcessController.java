@@ -191,6 +191,47 @@ public class AdjProcessController {
         }
     }
 
+    @GetMapping("/items-search")
+    public List<Map<String, Object>> searchItems(
+            @RequestParam(required = false) String search
+    ) {
+
+        System.out.println("=== /adj/items-search search=" + search + " ===");
+
+        return jdbcTemplate.queryForList(
+                "EXEC SRP_Filter_Search_Items ?",
+                emptyToNull(search)
+        );
+    }
+
+
+    @GetMapping("/address-search")
+    public List<Map<String, Object>> searchAddress(
+            @RequestParam(required = false) String search
+    ) {
+
+        System.out.println("=== /adj/address-search search=" + search + " ===");
+
+        return jdbcTemplate.queryForList(
+                "EXEC SRP_Filter_Search_Address ?",
+                emptyToNull(search)
+        );
+    }
+
+    @GetMapping("/principals-search")
+    public List<Map<String, Object>> searchPrincipals(
+            @RequestParam(required = false) String search
+    ) {
+
+        System.out.println("=== /adj/principals-search search=" + search + " ===");
+
+        return jdbcTemplate.queryForList(
+                "EXEC SRP_Filter_Search_Principals ?",
+                emptyToNull(search)
+        );
+    }
+
+
     /* ============================================================
        COMBOS
     ============================================================ */
@@ -198,72 +239,75 @@ public class AdjProcessController {
     @GetMapping("/principals")
     public List<Map<String, Object>> getPrincipals() {
         System.out.println("=== /adj/principals ===");
-        return jdbcTemplate.queryForList("EXEC SR_Process_Get_Principals");
+        return jdbcTemplate.queryForList("EXEC SRP_Filter_Get_Principals");
     }
 
     @GetMapping("/sr")
     public List<Map<String, Object>> getSR() {
         System.out.println("=== /adj/sr ===");
-        return jdbcTemplate.queryForList("EXEC SR_Process_Get_SR");
+        return jdbcTemplate.queryForList("EXEC SRP_Filter_Get_SR");
     }
 
     @GetMapping("/pm")
     public List<Map<String, Object>> getPM() {
         System.out.println("=== /adj/pm ===");
-        return jdbcTemplate.queryForList("EXEC SR_Process_Get_PM");
+        return jdbcTemplate.queryForList("EXEC SRP_Filter_Get_PM");
     }
 
     @GetMapping("/income-type")
     public List<Map<String, Object>> getIncomeType() {
         System.out.println("=== /adj/income-type ===");
-        return jdbcTemplate.queryForList("EXEC SR_Process_Get_IncomeType");
+        return jdbcTemplate.queryForList("EXEC SRP_Filter_Get_IncomeType");
     }
 
     @GetMapping("/business-type")
-    public List<Map<String, Object>> getBusinessType(
-            @RequestParam(required = false) String country
-    ) {
-        System.out.println("=== /adj/business-type country=" + country + " ===");
+    public List<Map<String, Object>> getBusinessType() {
+
+        System.out.println("=== /adj/business-type ===");
+
         return jdbcTemplate.queryForList(
-                "EXEC SR_Process_Get_BusinessType ?",
-                emptyToNull(country)
+                "EXEC SRP_Filter_Get_BusinessType"
         );
     }
 
     @GetMapping("/address")
     public List<Map<String, Object>> getAddress() {
         System.out.println("=== /adj/address ===");
-        return jdbcTemplate.queryForList("EXEC SR_Process_Get_Address");
+        return jdbcTemplate.queryForList("EXEC SRP_Filter_Get_Address");
     }
 
     @GetMapping("/items")
     public List<Map<String, Object>> getItems() {
         System.out.println("=== /adj/items ===");
-        return jdbcTemplate.queryForList("EXEC SR_Process_Get_Items");
+        return jdbcTemplate.queryForList("EXEC SRP_Filter_Get_Items");
     }
 
     @GetMapping("/ilob")
     public List<Map<String, Object>> getIlob() {
         System.out.println("=== /adj/ilob ===");
-        return jdbcTemplate.queryForList("EXEC SR_Process_Get_ILOB");
+        return jdbcTemplate.queryForList("EXEC SRP_Filter_Get_ILOB");
     }
 
     @GetMapping("/bu")
     public List<Map<String, Object>> getBU(
             @RequestParam(required = false) String country
     ) {
+
         System.out.println("=== /adj/bu country=" + country + " ===");
+
         return jdbcTemplate.queryForList(
                 "EXEC SR_Process_Get_BU ?",
                 emptyToNull(country)
         );
     }
 
+
     @GetMapping("/bc")
     public List<Map<String, Object>> getBC() {
         System.out.println("=== /adj/bc ===");
-        return jdbcTemplate.queryForList("EXEC SR_Process_Get_BC");
+        return jdbcTemplate.queryForList("EXEC SRP_Filter_Get_BC");
     }
+
 
     /* ============================================================
        UTIL

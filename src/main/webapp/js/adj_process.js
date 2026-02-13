@@ -28,10 +28,79 @@ $(document).ready(function () {
             $("#countryDropdown").text(selected.length + " countries selected");
         }
 
-        loadBU(); // sigue funcionando con CSV
+        loadBU();
     });
 
+    $(document).on("change", ".business-type-check", function () {
+
+        let selected = [];
+
+        $(".business-type-check:checked").each(function () {
+            selected.push($(this).val());
+        });
+
+        if (selected.length === 0) {
+            $("#businessTypeDropdown").text("Select Business Type");
+        } else if (selected.length === 1) {
+            $("#businessTypeDropdown").text(selected[0]);
+        } else {
+            $("#businessTypeDropdown").text(selected.length + " selected");
+        }
+
+    });
+
+    $(document).on("select2:open", function () {
+        setTimeout(function () {
+            document.querySelector(".select2-container--open .select2-search__field")?.focus();
+        }, 0);
+    });
+
+    $(document).on("change", ".ilob-check", function () {
+
+        let selected = [];
+
+        $(".ilob-check:checked").each(function () {
+            selected.push($(this).val());
+        });
+
+        if (selected.length === 0) {
+            $("#ilobDropdown").text("Select ILOB");
+        } else if (selected.length === 1) {
+            $("#ilobDropdown").text(selected[0]);
+        } else {
+            $("#ilobDropdown").text(selected.length + " selected");
+        }
+
+    });
+
+
+
 });
+
+/* ============================================================
+   SELECT2 INIT
+============================================================ */
+
+function enableSearchableSelect(selector) {
+
+    if ($(selector).hasClass("select2-hidden-accessible")) {
+        $(selector).select2('destroy');
+    }
+
+    $(selector).select2({
+        theme: "bootstrap4",
+        width: '100%',
+        multiple: true,
+        closeOnSelect: false,
+        allowClear: true,
+        placeholder: "Search..."
+    });
+
+}
+
+
+
+
 
 /* ============================================================
    PARAMS
@@ -40,20 +109,45 @@ $(document).ready(function () {
 function buildParams() {
 
     let selectedCountries = [];
+    let selectedIlob = [];
 
     $(".country-check:checked").each(function () {
         selectedCountries.push($(this).val());
     });
 
+    $(".ilob-check:checked").each(function () {
+        selectedIlob.push($(this).val());
+    });
+
     return {
-        country: selectedCountries.length > 0 ? selectedCountries.join(",") : null,
-        principal_number: $("#filterPrincipal").val() || null,
+        country: selectedCountries.length > 0
+            ? selectedCountries.join(",")
+            : null,
+
+        ilob: selectedIlob.length > 0
+            ? selectedIlob.join(",")
+            : null,
+
+        principal_number: ($("#filterPrincipal").val() || []).length > 0
+            ? $("#filterPrincipal").val().join(",")
+            : null,
+
         sr_name: $("#filterSalesManager").val() || null,
+
         pm_name: $("#filterProductManager").val() || null,
-        address_name: $("#filterAddressName").val() || null,
-        item_number: $("#filterItemName").val() || null,
+
+        address_name: ($("#filterAddressName").val() || []).length > 0
+            ? $("#filterAddressName").val().join(",")
+            : null,
+
+        item_number: ($("#filterItemName").val() || []).length > 0
+            ? $("#filterItemName").val().join(",")
+            : null,
+
         income_type: $("#filterIncomeType").val() || null,
+
         bc: $("#filterBCC").val() || null,
+
         page: currentPage,
         pageSize: pageSize
     };
@@ -112,7 +206,6 @@ function renderDetail(data) {
 
         tbody.append(tr);
     });
-
 }
 
 /* ============================================================
@@ -139,7 +232,6 @@ function renderTotals(data) {
     $("#InvBdg").val(t.InvBdg || 0);
     $("#GmBdg").val(t.GmBdg || 0);
     $("#GmPercBdg").val(t.GmPercBdg || 0);
-
 }
 
 /* ============================================================
@@ -205,7 +297,7 @@ function renderPagination() {
 
 function loadCombos() {
     loadCountry();
-    loadPrincipal();
+    loadPrincipals();
     loadIlob();
     loadSR();
     loadPM();
@@ -232,17 +324,67 @@ function loadCountry() {
 
 /* ---------------- PRINCIPAL ---------------- */
 
-function loadPrincipal() {
-    $.get("/budgettool/adj/principals", function (data) {
-        fillSelect("#filterPrincipal", data, "PRINCIPAL_NUMBER", "PRINCIPAL_NAME", true);
+function loadPrincipals() {
+
+    $("#filterPrincipal").select2({
+        theme: "bootstrap4",
+        width: "100%",
+        placeholder: "Search Principal...",
+        minimumInputLength: 2,
+        ajax: {
+            url: "/budgettool/adj/principals-search",
+            dataType: "json",
+            delay: 300,
+            data: function (params) {
+                return {
+                    search: params.term
+                };
+            },
+            processResults: function (data) {
+                return {
+                    results: data.map(function (item) {
+                        return {
+                            id: item["PRINCIPAL_NUMBER"],
+                            text: item["PRINCIPAL_NAME"]
+                        };
+                    })
+                };
+            }
+        }
+    });
+
+}
+
+
+function loadIlob() {
+
+    $.get("/budgettool/adj/ilob", function (data) {
+
+        const container = $("#ilobMenu");
+        container.empty();
+
+        if (!data) return;
+
+        data.forEach((item, index) => {
+
+            const id = "ilob_" + index;
+
+            container.append(`
+                <div class="form-check">
+                    <input class="form-check-input ilob-check"
+                           type="checkbox"
+                           value="${item.ILOB}"
+                           id="${id}">
+                    <label class="form-check-label" for="${id}">
+                        ${item.ILOB}
+                    </label>
+                </div>
+            `);
+        });
+
     });
 }
 
-function loadIlob() {
-    $.get("/budgettool/adj/ilob", function (data) {
-        fillSelect("#filterIlob", data, "ILOB", "ILOB", true);
-    });
-}
 
 function loadSR() {
     $.get("/budgettool/adj/sr", function (data) {
@@ -263,22 +405,100 @@ function loadIncomeType() {
 }
 
 function loadBusinessType() {
+
     $.get("/budgettool/adj/business-type", function (data) {
-        fillSelect("#filterBusinessType", data, "BUSINESSTYPE", "BUSINESSTYPE", true);
+
+        const container = $("#businessTypeMenu");
+        container.empty();
+
+        if (!data) return;
+
+        data.forEach((item, index) => {
+
+            const id = "bt_" + index;
+
+            container.append(`
+                <div class="form-check">
+                    <input class="form-check-input business-type-check"
+                           type="checkbox"
+                           value="${item.BUSINESSTYPE}"
+                           id="${id}">
+                    <label class="form-check-label" for="${id}">
+                        ${item.BUSINESSTYPE}
+                    </label>
+                </div>
+            `);
+        });
+
     });
 }
+
 
 function loadAddress() {
-    $.get("/budgettool/adj/address", function (data) {
-        fillSelect("#filterAddressName", data, "ADDRESS NAME", "ADDRESS NAME", true);
+
+    $("#filterAddressName").select2({
+        theme: "bootstrap4",
+        width: "100%",
+        placeholder: "Search Address...",
+        minimumInputLength: 2,
+        ajax: {
+            url: "/budgettool/adj/address-search",
+            dataType: "json",
+            delay: 300,
+            data: function (params) {
+                return {
+                    search: params.term
+                };
+            },
+            processResults: function (data) {
+                return {
+                    results: data.map(function (item) {
+                        return {
+                            id: item["ADDRESS NAME"],
+                            text: item["ADDRESS NAME"]
+                        };
+                    })
+                };
+            }
+        }
     });
+
 }
 
+
+
 function loadItems() {
-    $.get("/budgettool/adj/items", function (data) {
-        fillSelect("#filterItemName", data, "ITEM NUMBER", "ITEM NAME", true);
+
+    $("#filterItemName").select2({
+        theme: "bootstrap4",
+        width: "100%",
+        placeholder: "Search Item...",
+        minimumInputLength: 2,
+        ajax: {
+            url: "/budgettool/adj/items-search",
+            dataType: "json",
+            delay: 300,
+            data: function (params) {
+                return {
+                    search: params.term
+                };
+            },
+            processResults: function (data) {
+                return {
+                    results: data.map(function (item) {
+                        return {
+                            id: item["ITEM NUMBER"],
+                            text: item["ITEM NAME"]
+                        };
+                    })
+                };
+            }
+        }
     });
+
 }
+
+
 
 function loadBU() {
 
@@ -293,9 +513,12 @@ function loadBU() {
         : null;
 
     $.get("/budgettool/adj/bu", { country: countryParam }, function (data) {
+
         fillSelect("#filterBU", data, "BU", "BU_NAME", true);
+
     });
 }
+
 
 function loadBC() {
     $.get("/budgettool/adj/bc", function (data) {
@@ -304,15 +527,16 @@ function loadBC() {
 }
 
 /* ============================================================
-   UTIL
-============================================================ */
+    UTIL
+ ============================================================ */
 
 function fillSelect(selector, data, valueField, textField, includeAll = true) {
 
     const select = $(selector);
     select.empty();
 
-    if (includeAll) {
+    // Solo añadir "All" si NO es multiple
+    if (includeAll && !select.prop("multiple")) {
         select.append(`<option value="">All</option>`);
     }
 
@@ -323,5 +547,8 @@ function fillSelect(selector, data, valueField, textField, includeAll = true) {
             `<option value="${item[valueField]}">${item[textField]}</option>`
         );
     });
+
 }
+
+
 
