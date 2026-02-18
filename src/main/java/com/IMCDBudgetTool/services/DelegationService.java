@@ -29,8 +29,10 @@ public class DelegationService {
         mapaDelegationProcedures.put("bum_process", "dbo.BUM_UsersDelegation_List_Consult (?)");
         mapaDelegationProcedures.put("pm_process", "dbo.All_UsersDelegation_List_Consult (?,?)");
         mapaDelegationProcedures.put("sr_process", "dbo.All_UsersDelegation_List_Consult (?,?)");
-        mapaDelegationProcedures.put("adj_process", "dbo.All_UsersDelegation_List_Consult (?,?)");  // ← AÑADIR ESTA
+        mapaDelegationProcedures.put("adj_process", "dbo.All_UsersDelegation_List_Consult (?,?)");
+        mapaDelegationProcedures.put("export_snowflake", "dbo.All_UsersDelegation_List_Consult (?,?)"); // ← AÑADIR ESTA
     }
+
 
 
 

@@ -218,21 +218,28 @@ function renderTotals(data) {
 
     const t = data[0];
 
-    $("#QtyRoy").val(t.QtyRoy || 0);
-    $("#InvRoy").val(t.InvRoy || 0);
-    $("#GmRoy").val(t.GmRoy || 0);
-    $("#GmPercRoy").val(t.GmPercRoy || 0);
+    // Roy
+    $("#QtyRoy").val(formatThousands(t.QtyRoy || 0));
+    $("#InvRoy").val(formatThousands(t.InvRoy || 0));
+    $("#GmRoy").val(formatThousands(t.GmRoy || 0));
+    $("#GmPercRoy").val(formatPercent(t.GmPercRoy || 0));
 
-    $("#QtyFcs").val(t.QtyFcs || 0);
-    $("#InvFcs").val(t.InvFcs || 0);
-    $("#GmFcs").val(t.GmFcs || 0);
-    $("#GmPercFcs").val(t.GmPercFcs || 0);
+    // Fcs (solo máscara, no editable)
+    $("#QtyFcs").val(formatThousands(t.QtyFcs || 0));
+    $("#InvFcs").val(formatThousands(t.InvFcs || 0));
+    $("#GmFcs").val(formatThousands(t.GmFcs || 0));
+    $("#GmPercFcs").val(formatPercent(t.GmPercFcs || 0));
 
-    $("#QtyBdg").val(t.QtyBdg || 0);
-    $("#InvBdg").val(t.InvBdg || 0);
-    $("#GmBdg").val(t.GmBdg || 0);
-    $("#GmPercBdg").val(t.GmPercBdg || 0);
+    // Budget
+    $("#QtyBdg").val(formatThousands(t.QtyBdg || 0));
+    $("#InvBdg").val(formatThousands(t.InvBdg || 0));
+    $("#GmBdg").val(formatThousands(t.GmBdg || 0));
+    $("#GmPercBdg").val(formatPercent(t.GmPercBdg || 0));
+
+    applyEditableStyle();
+    updateTotalAreaTemp();
 }
+
 
 /* ============================================================
    PAGINATION
@@ -550,5 +557,91 @@ function fillSelect(selector, data, valueField, textField, includeAll = true) {
 
 }
 
+/* ============================================================
+   TOTAL AREA – EDITABLE GREEN + MASKS + TEMP STORAGE
+============================================================ */
 
+let totalAreaTemp = {
+    roy: { qty: 0, inv: 0, gm: 0, gmp: 0 },
+    budget: { qty: 0, inv: 0, gm: 0, gmp: 0 }
+};
 
+/* ================= MASKS ================= */
+
+function formatThousands(value) {
+
+    if (value === null || value === undefined) return "0";
+
+    value = value.toString().replace(/\./g, "");
+    value = value.replace(/\D/g, "");
+
+    if (value === "") return "0";
+
+    return value.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+}
+
+function formatPercent(value) {
+
+    if (value === null || value === undefined) return "00,00";
+
+    value = value.toString().replace(/,/g, "");
+    value = value.replace(/\D/g, "");
+
+    while (value.length < 4) {
+        value = "0" + value;
+    }
+
+    let intPart = value.slice(0, 2);
+    let decPart = value.slice(2, 4);
+
+    return intPart + "," + decPart;
+}
+
+/* ================= EDITABLE STYLE ================= */
+
+function applyEditableStyle() {
+
+    const editableFields = [
+        "#QtyRoy", "#InvRoy", "#GmRoy", "#GmPercRoy",
+        "#QtyBdg", "#InvBdg", "#GmBdg", "#GmPercBdg"
+    ];
+
+    editableFields.forEach(id => {
+        $(id)
+            .prop("readonly", false)
+            .css({
+                "background-color": "#28a745",
+                "color": "#ffffff",
+                "font-weight": "600"
+            });
+    });
+}
+
+/* ================= TEMP UPDATE ================= */
+
+function updateTotalAreaTemp() {
+
+    totalAreaTemp.roy.qty = $("#QtyRoy").val();
+    totalAreaTemp.roy.inv = $("#InvRoy").val();
+    totalAreaTemp.roy.gm = $("#GmRoy").val();
+    totalAreaTemp.roy.gmp = $("#GmPercRoy").val();
+
+    totalAreaTemp.budget.qty = $("#QtyBdg").val();
+    totalAreaTemp.budget.inv = $("#InvBdg").val();
+    totalAreaTemp.budget.gm = $("#GmBdg").val();
+    totalAreaTemp.budget.gmp = $("#GmPercBdg").val();
+}
+
+/* ================= INPUT BINDING ================= */
+
+$(document).on("input", "#QtyRoy, #InvRoy, #GmRoy, #QtyBdg, #InvBdg, #GmBdg", function () {
+
+    $(this).val(formatThousands($(this).val()));
+    updateTotalAreaTemp();
+});
+
+$(document).on("input", "#GmPercRoy, #GmPercBdg", function () {
+
+    $(this).val(formatPercent($(this).val()));
+    updateTotalAreaTemp();
+});
